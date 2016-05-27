@@ -30,33 +30,54 @@
 #include "pll.h"
 
 #include <avr/io.h>
-#include <math.h>   // FIXME: Floor bypass with simple cast?
 #include <util/delay.h>
+
 
 #define COUNTER_RESET         4  //  5th bit, Register 4
 #define AUTOCAL              21  // 22th bit, Register 0
 #define RF_OUTPUT_ENABLE      6  //  7th bit, Register 6
 
 
-/* Precalculated settings for the PLL, using 4 Banks */
+/* TEST
 static uint32_t pllGeneralSettings[13] = {
-    0x002028E0,  // Register 0
-    0x0147AE11,  // Register 1
+    0x0025A000,  // Register 0 
+    0x00000001,  // Register 1
     0x00000012,  // Register 2
     0x00000003,  // Register 3
-    0x30008984,  // Register 4
+    0x30196584,  // Register 4 
     0x00800025,  // Register 5
-    0x35C024F6,  // Register 6
+    0x35A00CF6,  // Register 6  // FIXME : use flags !
     0x12000007,  // Register 7
     0x102D0428,  // Register 8
-    0x05047CC9,  // Register 9
+    0x0200BCC9,  // Register 9
     0x60C017FA,  // Register 10
     0x0061300B,  // Register 11
     0x0001041C   // Register 12
 };
+*/
+
+
+
+/* Precalculated settings for the PLL */
+static uint32_t pllGeneralSettings[13] = {
+    0x00201CC0,  // Register 0 
+    0x0CCCCCC1,  // Register 1
+    0x00000012,  // Register 2
+    0x40000003,  // Register 3
+    0x3000C184,  // Register 4 
+    0x00800025,  // Register 5
+    0x35C02CF6,  // Register 6  // FIXME : use flags !
+    0x12000007,  // Register 7
+    0x102D0428,  // Register 8
+    0x14053CF9,  // Register 9
+    0x60C017FA,  // Register 10
+    0x0061300B,  // Register 11
+    0x0000041C   // Register 12
+};
+
 
 /* Precalculated settings for the PLL, using 4 Banks */
-static uint32_t pllCustomSettings[18][2];  // 18 = domino...
+static uint32_t pllCustomSettings[6][2];  // 6 Tones MAX
 
 
 //void spiInit(void) {  // faire un fichier separe
@@ -101,7 +122,7 @@ void pllTransmitWord(uint32_t data) {
     /* Enable PLL LE */
     PORTB &= ~_BV(PORTB2);
 
-    uint8_t *p = (uint8_t*)&data;  // FIXME : peut-etre PB avec le &
+    uint8_t *p = (uint8_t*)&data;
     for (uint8_t i=0; i<4; i++) {
         /* Start transmission */
         SPDR = p[3-i];  // Little endian
@@ -137,25 +158,24 @@ void pllUpdate(uint8_t bank) {
     /* Regular way to update the PLL : Documentation ADF4355-2, page 29 
        http://www.analog.com/media/en/technical-documentation/data-sheets/ADF4355-2.pdf */
 
-    pllGeneralSettings[4] |= (1UL<<COUNTER_RESET);   // Counter reset enabled [DB4 = 1] 
-    pllTransmitWord(pllGeneralSettings[4]);          // Register 4 (counter reset enabled [DB4 = 1]) 
+    pllGeneralSettings[4] |= (1UL<<COUNTER_RESET);        // Counter reset enabled [DB4 = 1] 
+    pllTransmitWord(pllGeneralSettings[4]);               // Register 4 (counter reset enabled [DB4 = 1]) 
 
-    //pllTransmitWord(pllGeneralSettings[bank][2]);          // Register 2 
+    //pllTransmitWord(pllGeneralSettings[bank][2]);         // Register 2 
 
     pllTransmitWord(pllCustomSettings[bank][1]);          // Register 1
 
-    pllCustomSettings[bank][0] &= ~(1UL<<AUTOCAL);         // Autocal enable
+    pllCustomSettings[bank][0] &= ~(1UL<<AUTOCAL);        // Autocal enable
     pllTransmitWord(pllCustomSettings[bank][0]);          // Register 0 (autocal disabled [DB21 = 0]) 
 
-    pllGeneralSettings[4] &= ~(1UL<<COUNTER_RESET);  // Counter reset disable [DB4 = 0] 
-    pllTransmitWord(pllGeneralSettings[4]);         // Register 4 (counter reset disabled [DB4 = 0]) 
+    pllGeneralSettings[4] &= ~(1UL<<COUNTER_RESET);       // Counter reset disable [DB4 = 0] 
+    pllTransmitWord(pllGeneralSettings[4]);               // Register 4 (counter reset disabled [DB4 = 0]) 
 
-    _delay_us(250);                                       // Sleep FIXME
+    _delay_us(500);                                       // Sleep FIXME
     pllCustomSettings[bank][0] |= (1UL<<AUTOCAL);         // Autocal enable
     pllTransmitWord(pllCustomSettings[bank][0]);          // Register 0 (autocal enabled [DB21 = 1]) 
 
-    _delay_us(468);  // Align on 2ms -- Update = 1.530ms
-    
+    _delay_us(178);  // Align on 1ms
 }
 
 
@@ -166,15 +186,15 @@ void pllUpdateTiny(uint8_t bank) {
     pllTransmitWord(pllCustomSettings[bank][1]);          // Register 1
     pllCustomSettings[bank][0] |= (1UL<<AUTOCAL);         // Autocal enable
     pllTransmitWord(pllCustomSettings[bank][0]);          // Register 0 (autocal enabled [DB21 = 1]) 
-    _delay_us(485);  // Align on 1ms
+    _delay_us(870);  // Align on 1ms
 }
 
 
 void pllSetFreq(uint64_t freq, uint8_t bank) {
-    /* Calculate the frequency register -- Application 50MHz, with a /2 prescaler */
+    /* Calculate the frequency register -- Application 144MHz (Usable only beetween : 106.25 - 212.5 MHz) */
     /* NOTE : AVR do NOT support double, and precision of float are insuffisant, so I use uint64... */
 
-    uint64_t pllVcoFreq  = freq * 2 * 64;
+    uint64_t pllVcoFreq  = freq * 128;
     uint64_t pllN        = pllVcoFreq / 10000000;
     
     uint64_t pllNint1    = pllN / 1000000;
@@ -185,7 +205,6 @@ void pllSetFreq(uint64_t freq, uint8_t bank) {
 
     pllCustomSettings[bank][0] = (intN<<4);
     pllCustomSettings[bank][1] = (intFrac1<<4) | 0x00000001; 
-    //pllGeneralSettings[2] = 0x00000012;  // Disable 
 }
 
 

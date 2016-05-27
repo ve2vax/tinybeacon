@@ -26,6 +26,41 @@
  */
 
 
+/* |                                                                   |
+   |  TinyBeacon project                                               |
+   |                                                                   |
+   |  - VHF/UHF Beacon (design available for 50, 144, 220 & 440 MHz)   |
+   |  - Compact design / Credit card size                              |
+   |  - QRP, 5W output power                                           |
+   |  - 10 MHz oscillator stabilized by GPS (GPSDO)                    |
+   |  - DC-DC Power supply within 10-15V, 1.5A max                     |
+   |  - Compatible with WSPR & PI4 protocols                           | 
+   |                                                                   |
+   |                                                                   |
+   |  IO Mapping uController, rev.C                                    |
+   |                                                                   |
+   |  - PC4/SDA  (pin 27) | I2C SDA                                    |
+   |  - PC5/SCL  (pin 28) | I2C SCL                                    |
+   |  - PD0/RXD  (pin 30) | USART RX                                   |
+   |  - PD1/TXD  (pin 31) | USART TX                                   |
+   |  - PD5      (pin  9) | GPS INT                                    |
+   |  - PD6      (pin 10) | PA EN                                      |
+   |  - PD7      (pin 11) | INFO LED                                   |
+   |  - PB0      (pin 12) | PLL LOCK                                   |
+   |  - PB2      (pin 14) | PLL EN                                     | 
+   |                                                                   |
+   |                                                                   |
+   |  VA2NQ Beacon -- Frequency band plan                              |
+   |                                                                   |
+   |   BAND | CW/PI4 Frequency | WSPR Frequency | PLL Reg. 6           |
+   |--------|------------------|----------------|----------------------|
+   |  50MHz | 50295000.0       | 50294450.0     | 0x35C02CF6 (/128!)   |
+   |  70MHz | NA, Region 2     | NA, Region 2   | 0x35C02CF6 (/64)     |
+   | 144MHz | 144491000.0      | 144490450.0    | 0x35A02CF6 (/32)     |
+   | 222MHz | 222295000.0 +1?  | 222294450.0    | 0x35802CF6 (/16)     |
+   | 440MHz | 432302000.0      | 432301450.0    | 0x35602CF6 ( /8)     |      FIXME : Mod avec flag & multiplier...
+   |                                                                   | */
+
 #include "cpu.h"
 
 #include "twi.h"
@@ -35,18 +70,55 @@
 
 #include "morse.h"
 #include "pi4.h"
+#include "wspr.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
- 
+
+
+void timeAlignPI4() {
+	/* Update the GPS data for the next time align */
+	gpsGetNMEA();
+	gpsExtractStrings();
+
+	/* Align on an minute for the next message */
+	gpsTimeAling1Mb();
+}
+
+
+void timeAlignWSPR() {
+	/* Update the GPS data for the next time align */
+	gpsGetNMEA();
+	gpsExtractStrings();
+
+	/* Align on odd minute for the next message */
+	gpsTimeAling2Mb();
+}
+
+
+void pi4sequence() {
+	/* 1st part : Send PI4 message, 25 sec */
+	pi4Send();
+
+	/* 2nd part : Send morse message */
+	morse2TonesSendMessage();
+
+	/* 3th part : Send a carrier, 10 sec, same frequency */
+	pllUpdate(1);
+	pllPA(1);
+	pllRfOutput(1);
+	_delay_ms(10000);
+	pllRfOutput(0);
+	pllPA(0);
+}
 
 
 int main (void) {
-	/* CKDIV8 fuse is set -- Frequency is divided by 8 at start : Manually update to 4MHz */
+	/* CKDIV8 fuse is set -- Frequency is divided by 8 at start : 2.5MHz */
 	cli();
-	CLKPR = _BV(CLKPCE); // Enable change of CLKPS bits
-	CLKPR = _BV(CLKPS1); // Set prescaler to 4 = System clock 2.5 MHz
+	CLKPR = _BV(CLKPCE);  // Enable change of CLKPS bits
+	CLKPR = 0;            // Set prescaler to 0 = Restore system clock to 10 MHz
 	sei();
 
     /* DEBUG Enable I2C output */
@@ -76,10 +148,6 @@ int main (void) {
 	usartInit();
 	_delay_ms(10);
 
-	/* uBlox GPS init & settings */
-	gpsSetPulseTimer();
-	_delay_ms(10);
-
 	/* ADF4355-2 init & settings */
 	pllProgramInit();
 	_delay_ms(10);
@@ -87,38 +155,43 @@ int main (void) {
 	/* Prepare the message to encode for PI4 message */
 	pi4Encode();
 
-	/* Get the GPS postion & calculate the locator (NO dynamic update) */
-	gpsGetNMEA();
-	gpsExtractLocator();
+	/* Prepare the message to encode for WSPR message */
+	wsprEncode();
 
+	/* Update the GPS data for the next time align */
+	gpsGetNMEA();
+	gpsExtractStrings();
+
+	/* uBlox 10MHz timing settings */
+	gpsSet_CFG_TP5();
+	_delay_ms(10);
+
+	/* uBlox high refresh rate for timing */
+	gpsSet_CFG_RATE();
+	_delay_ms(10);
+
+	/* Loop sequence :
+	   - PI4 + Morse + Tone (1 minute)
+	   - PI4 + Morse + Tone (1 minute)
+	   - WSPR (2 minutes)
+	*/
 	while(1) {
 	   	/* Start SEQ : Turn on the LED (pin 11) */
 		PORTD |= _BV(PORTD7);
 
-	    /* 1st part : Send PI4 message, 25 sec */
-	    pi4Send();
+		//wsprSend(); // DEBUG
 
-	    /* 2nd part : Send morse message */
-		morse2TonesSendMessage();
+		timeAlignPI4();
+		pi4sequence();
 
-		/* 3th part : Send a carrier, 10 sec, same frequency */
-		pllUpdate(1);
-		pllPA(1);
-    	pllRfOutput(1);
-        _delay_ms(10000);
-	    pllRfOutput(0);
-    	pllPA(0);
+		timeAlignPI4();
+		pi4sequence();
+
+		timeAlignWSPR(); 
+		wsprSend();
 
 		/* End SEQ : Turn off the LED (pin 11) */
 		PORTD &= ~_BV(PORTD7);
-
-	    /* Update the GPS data for the next time align */
-	    gpsGetNMEA();
-	    gpsExtractStrings();
-	    
-	    /* Align on an minute for the next message */
-	    gpsTimeAling1M();
-
 	}
 
 	/* This case never happens :) Useless without powermanagement... */

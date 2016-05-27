@@ -35,14 +35,16 @@
 void gpsInit();
 void gpsShutdown();
 void gpsSetAddr(uint8_t addr);
-void gpsSetPulseTimer();
-void gpsSetup_CFG_PRT();
-void gpsSetup_CFG_MSG();
-void gpsShutdown_CFG_MSG();
+void gpsSet_CFG_TP5();
+void gpsSet_CFG_RATE();
+void gpsSet_CFG_PRT();
+void gpsPoll_NAV_PVT();
 void gpsCrcUpdate(uint8_t *payload, uint8_t payloadSize);
 void gpsGetNMEA();
 void gpsExtractLocator();
 void gpsExtractStrings();
+void gpsTimeAling1Mb();
+void gpsTimeAling2Mb();
 void gpsTimeAling1M();
 void gpsTimeAling2M();
 char* getLocator();
@@ -59,4 +61,3 @@ char* getMinutes();
 char* getSeconds();
 char* getNumSat();
 char* getSeq();
-

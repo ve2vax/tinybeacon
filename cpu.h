@@ -30,7 +30,7 @@
 
 
 /* CPU frequency */
-#define F_CPU 2500000UL
+#define F_CPU 10000000UL
 
 /* Standard definition used almost everywhere */
 #include <stdint.h>

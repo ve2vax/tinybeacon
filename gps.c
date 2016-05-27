@@ -30,11 +30,10 @@
 #include "gps.h"
 
 #include "twi.h"
-#include "usart.h"
 
 #include <avr/io.h>
-#include <math.h>  // FIXME : Floor a bypasser par un simple cast ?!
 #include <util/delay.h>
+#include <avr/pgmspace.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,6 +46,7 @@ static uint8_t gpsAddr;
 
 /* Local/Private structrues for this processing code */
 typedef struct gpsDataStruct {
+    uint32_t  itow; 
     uint16_t  year;
     uint8_t   month;
     uint8_t   day;
@@ -87,9 +87,7 @@ gpsData    lGpsData;    // Structure with all raw GPS data
 gpsString  lGpsString;  // Structure with all extracted/computed GPS data
 
 
-// FIXME PASSER en progmem pour gagner en RAM
-/* Data block used for change the output PPS (10 MHz) */
-static uint8_t payload10M[] = {
+static const uint8_t PROGMEM CFG_TP5[] = {
     0xB5, 0x62,             // Header
     0x06, 0x31,             // ID
     0x20, 0x00,             // Length
@@ -98,17 +96,25 @@ static uint8_t payload10M[] = {
     0x00, 0x00,             // reserved1 
     0x00, 0x00,             // antCableDelay
     0x00, 0x00,             // rfGroupDelay
-    0x01, 0x00, 0x00, 0x00, // freqPeriod = 1Hz
+    0x01, 0x00, 0x00, 0x00, // freqPeriod = 1 Hz
     0x80, 0x96, 0x98, 0x00, // freqPeriodLock = 10MHz
-    0x00, 0x00, 0x00, 0x00, // pulseLenRatio = 0%
+    0x00, 0x00, 0x00, 0x00, // pulseLenRatio = 0% (disable)
     0x00, 0x00, 0x00, 0x80, // pulseLenRatioLock = 50%
     0x00, 0x00, 0x00, 0x00, // userConfigDelay
-    0x2F, 0x00, 0x00, 0x00, // flags : 0010 1111
-    0x00, 0x00              // CRC
+    0xEF, 0x08, 0x00, 0x00, // flags
+    0x7E, 0x28              // CRC
 };
 
 
-static uint8_t payload_CFG_PRT[] = {
+static const uint8_t PROGMEM CFG_RATE[] = {
+    0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x4B, 0x00, 0x14, 0x00, 0x00, 0x00, 0x73, 0xC6 //   75ms   / 20cyc
+    //0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x64, 0x00, 0x0A, 0x00, 0x00, 0x00, 0x82, 0x34 //  100ms   / 10cyc
+    //0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x88, 0x13, 0x01, 0x00, 0x00, 0x00, 0xB0, 0x47 //  5000ms  / 1cyc
+    //0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0x60, 0xEA, 0x01, 0x00, 0x00, 0x00, 0x5F, 0x8A //  60000ms / 1cyc
+};
+
+
+static const uint8_t PROGMEM CFG_PRT[] = {
     0xB5, 0x62,             // Header
     0x06, 0x00,             // ID
     0x14, 0x00,             // Length
@@ -121,32 +127,32 @@ static uint8_t payload_CFG_PRT[] = {
     0x01, 0x00,             // outProtoMask (1 = out UBX only)
     0x00, 0x00,             // flags (0 = Extended TX timeout )
     0x00, 0x00,             // reserved5
-    0x00, 0x00              // CRC
+    0xA0, 0x96              // CRC
 };
 
 
-// Payload to enable UBX-NAV-PVT on DDC/I2C
-static uint8_t payload_CFG_MSG[] = {
+static const uint8_t PROGMEM NAV_PVT[] = {
     0xB5, 0x62,             // Header
-    0x06, 0x01,             // ID
-    0x06, 0x00,             // Length
-    0x01, 0x07,             // Message Class + Message Identifier
-    0x01,                   // Rate on port 0 (DDC)
-    0x00,                   // Rate on port 1 (UART 1)
-    0x00,                   // Rate on port 2
-    0x00,                   // Rate on port 3 (USB)
-    0x00, 0x00              // CRC
+    0x01, 0x07,             // ID
+    0x00, 0x00,             // Length
+    0x08, 0x19              // CRC
 };
 
 
 void gpsInit() {
-    /* GPS Reset port : set pin 9 of PORT-PD5 for output*/
+    /* GPS EXTINT : set pin 9 of PORT-PD5 for output*/
     DDRD |= _BV(DDD5);
 
-    /* GPS not disable  */
-    PORTD |= _BV(PORTD5);
+    /* GPS EXTINT for now (energy saver feature) */
+    PORTD &= ~_BV(PORTD5);
 
     /* Note : I2C bus Init is done by i2c.c */
+
+    // Rev.B GPS Reset PIN ======= Do NOT use on Rev.C
+    /* GPS Reset port : set pin 9 of PORT-PD5 for output*/
+    //DDRD |= _BV(DDD5);
+    /* GPS not disable  */
+    //PORTD |= _BV(PORTD5);
 }
 
 
@@ -160,35 +166,28 @@ void gpsSetAddr(uint8_t addr) {
 }
 
 
-void gpsSetPulseTimer() {
-    gpsCrcUpdate(payload10M, sizeof(payload10M));
-    twi_writeTo(gpsAddr, payload10M, sizeof(payload10M), 1, 0);
+void gpsSet_CFG_TP5() {
+    // No gpsCrcUpdate -- CRC Hardcoded
+    twi_writeToPgm(gpsAddr, CFG_TP5, sizeof(CFG_TP5), 1, 0);
+    _delay_ms(100);
+}
+
+
+void gpsSet_CFG_RATE() {
+    twi_writeToPgm(gpsAddr, CFG_RATE, sizeof(CFG_RATE), 1, 0);
+    _delay_ms(100);  
+}
+
+
+void gpsSet_CFG_PRT() {
+    twi_writeToPgm(gpsAddr, CFG_PRT, sizeof(CFG_PRT), 1, 0);
     _delay_ms(1);
 }
 
 
-void gpsSetup_CFG_PRT() {
-    payload_CFG_PRT[18] = 0x01;
-    payload_CFG_PRT[20] = 0x01;
-    gpsCrcUpdate(payload_CFG_PRT, sizeof(payload_CFG_PRT));
-    twi_writeTo(gpsAddr, payload_CFG_PRT, sizeof(payload_CFG_PRT), 1, 0);
-    _delay_ms(1);
-}
-
-
-void gpsSetup_CFG_MSG() {
-    payload_CFG_MSG[8] = 0x01;
-    gpsCrcUpdate(payload_CFG_MSG, sizeof(payload_CFG_MSG));
-    twi_writeTo(gpsAddr, payload_CFG_MSG, sizeof(payload_CFG_MSG), 1, 0);
-    _delay_ms(1);
-}
-
-
-void gpsShutdown_CFG_MSG() {
-    payload_CFG_MSG[8] = 0x00;
-    gpsCrcUpdate(payload_CFG_MSG, sizeof(payload_CFG_MSG));
-    twi_writeTo(gpsAddr, payload_CFG_MSG, sizeof(payload_CFG_MSG), 1, 0);
-    _delay_ms(1);
+void gpsPoll_NAV_PVT() {
+    twi_writeToPgm(gpsAddr, NAV_PVT, sizeof(NAV_PVT), 1, 0);
+    _delay_ms(1);    
 }
 
 
@@ -207,16 +206,33 @@ void gpsCrcUpdate(uint8_t *payload, uint8_t payloadSize) {
 }
 
 
-void gpsGetNMEA() {
+void gpsFlushBuffer() {
     uint16_t byteToRead;
-    uint8_t  *data;
     uint8_t  garbage;
 
     uint8_t  cmd = 0xFD;
-    uint8_t  cmd2 = 0xFF;
 
-    /* Received data or not (timeout) */
-    uint8_t  counter = 60;
+    /* Point on the bytes available (Register Adressing) */
+    twi_writeTo(gpsAddr, &cmd, 1, 1, 0);  // 0xFD & 0xFE for the 16 bit register
+    _delay_ms(1);
+    
+    /* Read the effective buffered byte on the GPS uProcessor */
+    if(!twi_readFrom(gpsAddr, (uint8_t*) &byteToRead, 2, 0))
+        return;
+    
+    byteToRead = ((byteToRead>>8) | (byteToRead<<8));  // Little endian conversion
+
+    while (byteToRead--)
+        twi_readFrom(gpsAddr, &garbage, 1, 0);
+}
+
+
+void gpsGetNMEA() {
+    uint16_t byteToRead;
+    uint8_t  *data;
+
+    uint8_t  cmd = 0xFD;
+    uint8_t  cmd2 = 0xFF;
 
     /* GPS locked flag (incremented at each valid line) */
     uint8_t  valid = 0;     
@@ -230,16 +246,13 @@ void gpsGetNMEA() {
     memset(data, 0, 100 * sizeof(uint8_t)); 
 
     /* Setup & restrict the DDC port only */
-    gpsSetup_CFG_PRT();
+    gpsSet_CFG_PRT();
     
-    /* Enable UBX-NAV-PVT messages on DDC/I2C only */
-    gpsSetup_CFG_MSG();
- 
-    // FIXME : Recherche de pattern meilleur que le skip de taille...
+    while (!valid) {  // 3 minute max to get a full sync
+        gpsFlushBuffer();
 
-    while ((!valid) && counter) {  // 3 minute max to get a full sync
-        _delay_ms(250);   
-        
+        gpsPoll_NAV_PVT();
+
         /* Point on the bytes available (Register Adressing) */
         twi_writeTo(gpsAddr, &cmd, 1, 1, 0);  // 0xFD & 0xFE for the 16 bit register
         _delay_ms(1);
@@ -251,11 +264,7 @@ void gpsGetNMEA() {
         byteToRead = ((byteToRead>>8) | (byteToRead<<8));  // Little endian conversion
 
         /* Free the buffer if unexpected size */
-        if (byteToRead != 100) {
-            while (byteToRead--)
-                twi_readFrom(gpsAddr, &garbage, 1, 0);
-            continue;
-        } else {
+        if (byteToRead == 100) {
             /* Point on the stream buffer (Register Adressing) */
             twi_writeTo(gpsAddr, &cmd2, 1, 1, 0);  // 0xFF = StreamBuffer
             _delay_ms(1);
@@ -268,13 +277,14 @@ void gpsGetNMEA() {
             /* Check the validity of the data */
             if ((data[17] & 0x07) == 0x07) {
                 /* Extract usefull data */
+                lGpsData.itow    = *(uint32_t*) &data[6];
                 lGpsData.year    = *(uint16_t*) &data[10];
                 lGpsData.month   =               data[12];
                 lGpsData.day     =               data[13];
                 lGpsData.hours   =               data[14];
                 lGpsData.minutes =               data[15];
                 lGpsData.seconds =               data[16];
-                lGpsData.nano    = *(int32_t*)  &data[16];
+                lGpsData.nano    = *(int32_t*)  &data[22];
                 lGpsData.lon     = *(int32_t*)  &data[30];
                 lGpsData.lat     = *(int32_t*)  &data[34];
                 lGpsData.height  = *(int32_t*)  &data[38];
@@ -284,13 +294,11 @@ void gpsGetNMEA() {
 
                 /* Set the stop condition */
                 valid++;
+            } else {
+                _delay_ms(100);
             }
         }
-        counter--;
     }
-
-    /* Stop the DDC port to avoid to fill the buffer */
-    gpsShutdown_CFG_MSG();
 
     /* Raw data no longer needed */
     free(data);
@@ -362,19 +370,13 @@ void gpsExtractLocator() {
 }
 
 
-/*
-void gpsTimeAling1M() {
-    uint32_t msec = 60000 - (lGpsData.iTOW % 60000);
-    
-    while (msec--)
-        _delay_ms(1);
-}
-*/
-
-
 void gpsTimeAling1M() {
     uint8_t sec = 59 - lGpsData.seconds;
     int32_t nano = 1000 - (lGpsData.nano/1000000);
+
+    // FIXME - CHECK
+    if(sec > 60) sec=60;
+    if(nano > 1000) nano=1000;
 
     // _delay_ms function support only const... :(
     while (sec--)
@@ -390,6 +392,10 @@ void gpsTimeAling2M() {
     uint8_t sec = 59 - lGpsData.seconds;
     int32_t nano = 1000 - (lGpsData.nano/1000000);
     
+    // FIXME - CHECK
+    if(sec > 60) sec=60;
+    if(nano > 1000) nano=1000;
+
     if (!(min % 2))
          _delay_ms(60000);
     
@@ -398,6 +404,22 @@ void gpsTimeAling2M() {
 
     while (nano--)
       _delay_ms(1);    
+}
+
+
+void gpsTimeAling1Mb() {
+    uint32_t milli = 60000 - (((lGpsData.itow % 60000) + 43000)% 60000) ; // 17 = leapSecond (60-17=43)
+
+    while (milli--)
+      _delay_ms(1);
+}
+
+
+void gpsTimeAling2Mb() {
+    uint32_t milli = 120000 - ((lGpsData.itow - 17000)% 120000) ; // 17 = leapSecond
+
+    while (milli--)
+      _delay_ms(1);
 }
 
 

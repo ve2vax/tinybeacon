@@ -25,6 +25,7 @@
  * 
  */
 
+
 /* Protocol description & source : http://www.rudius.net/oz2m/ngnb/pi4.htm */
 
 
@@ -33,30 +34,32 @@
 
 #include "pll.h"
 
-#include <avr/io.h>
 #include <string.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 
-#define PI4_MESSAGE             "N0CALL  "    // UPDATE with your Callsign
 
-#define PI4_FREQUENCY            50450000.0   // UPDATE with frequency aligned with the frequency bands
-#define PI4_SYMBOL_DURATION      166  // ms
-#define PI4_SYMBOLS              146  // The number of symbols in the PI4 transmission
-#define PI4_MSG_LENGTH           8    // Maximum message length allowed
+#define PI4_MESSAGE              "F8KID   "   // UPDATE with your Callsign (8 chars, padding with spaces)
+
+#define PI4_FREQUENCY            50295000.0  // UPDATE with frequency aligned with the frequency bands
+
+#define PI4_SYMBOL_DURATION      166.667      // ms
+#define PI4_SYMBOLS              146          // The number of symbols in the PI4 transmission
+#define PI4_MSG_LENGTH           8            // Maximum message length allowed
 
 
 /* PI4 output symbols */
 static uint8_t Symbols[PI4_SYMBOLS]; 
 
 /* Encoding stuff */
-// FIXME !!! ++ PROGMEM
 static const uint8_t PI4Chars[]          = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ /";
-static const uint8_t PI4Vector[] PROGMEM = { 0,0,1,0,0,1,1,1,1,0,1,0,1,0,1,0,0,1,0,0,0,1,0,0,0,1,1,0,0,1,
-                                             1,1,1,0,0,1,1,1,1,1,0,0,1,1,0,1,1,1,1,0,1,0,1,1,0,1,1,0,1,0,
-                                             0,0,0,0,1,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,1,1,1,0,1,0,0,1,0,0,
-                                             1,0,1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,1,1,1,
-                                             0,1,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0,1,1,1,0,0,0,0,1,1 };
+static const uint8_t PI4Vector[] PROGMEM = { 
+    0,0,1,0,0,1,1,1,1,0,1,0,1,0,1,0,0,1,0,0,0,1,0,0,0,1,1,0,0,1,
+    1,1,1,0,0,1,1,1,1,1,0,0,1,1,0,1,1,1,1,0,1,0,1,1,0,1,1,0,1,0,
+    0,0,0,0,1,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,1,1,1,0,1,0,0,1,0,0,
+    1,0,1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,1,1,1,
+    0,1,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0,1,1,1,0,0,0,0,1,1 };
+
 
 uint32_t Parity(uint64_t Value) {
     uint32_t Even=0;
@@ -109,10 +112,10 @@ void PI4MakeMessage(char *msg) {
     /* Interleaving */
     uint8_t P=0;
     uint8_t R=0;
-    uint32_t Interleaved[PI4_SYMBOLS] = {0}; // FIX mem fill 0
+    uint32_t Interleaved[PI4_SYMBOLS] = {0};                           // FIXME mem fill 0
     memset (Interleaved, 0x00, PI4_SYMBOLS);
 
-    for (uint16_t i=0; i<=255; i++) { // PB... <=
+    for (uint16_t i=0; i<=255; i++) {                                  // FIXME/CHECK
         for (uint8_t BitNo=0; BitNo<=7; BitNo++) {
             if ((i >> BitNo) & 1) 
                 R |= 1 << (7-BitNo);
@@ -136,12 +139,12 @@ void pi4SetFreqs(float carrierFreq) {
     pllSetFreq((carrierFreq + 117.1875) * 1000000, 1);
     pllSetFreq((carrierFreq + 351.5625) * 1000000, 2);
     pllSetFreq((carrierFreq + 585.9375) * 1000000, 3);
-    pllUpdate(0);
-    _delay_ms(10);
+    pllSetFreq((carrierFreq           ) * 1000000, 4);
+    pllUpdate(4);
 }
 
 
-void pi4Encode() {
+void pi4Encode() { // FIXME useless function...
     /* PI4 Message encoding - Part 1 */
     PI4MakeMessage(PI4_MESSAGE);   
 }
@@ -151,13 +154,12 @@ void pi4Send() {
     pi4SetFreqs(PI4_FREQUENCY);
 
     pllPA(1);
-    _delay_ms(250);
     pllRfOutput(1);
 
     // Send PI4 message
     for (int i=0; i<PI4_SYMBOLS; i++) {
         pllUpdate( Symbols[i] );
-        _delay_ms(PI4_SYMBOL_DURATION - 2);  // FIXME !!! Timing to adjust !
+        _delay_ms(PI4_SYMBOL_DURATION - 1.0);  // Timing adjustment !
     }
 
     pllRfOutput(0);
