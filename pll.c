@@ -38,26 +38,6 @@
 #define RF_OUTPUT_ENABLE      6  //  7th bit, Register 6
 
 
-/* TEST
-static uint32_t pllGeneralSettings[13] = {
-    0x0025A000,  // Register 0 
-    0x00000001,  // Register 1
-    0x00000012,  // Register 2
-    0x00000003,  // Register 3
-    0x30196584,  // Register 4 
-    0x00800025,  // Register 5
-    0x35A00CF6,  // Register 6  // FIXME : use flags !
-    0x12000007,  // Register 7
-    0x102D0428,  // Register 8
-    0x0200BCC9,  // Register 9
-    0x60C017FA,  // Register 10
-    0x0061300B,  // Register 11
-    0x0001041C   // Register 12
-};
-*/
-
-
-
 /* Precalculated settings for the PLL */
 static uint32_t pllGeneralSettings[13] = {
     0x00201CC0,  // Register 0 
@@ -66,7 +46,7 @@ static uint32_t pllGeneralSettings[13] = {
     0x40000003,  // Register 3
     0x3000C184,  // Register 4 
     0x00800025,  // Register 5
-    0x35C02CF6,  // Register 6  // FIXME : use flags !
+    0x35A02CF6,  // Register 6  // FIXME : use flags !
     0x12000007,  // Register 7
     0x102D0428,  // Register 8
     0x14053CF9,  // Register 9
@@ -194,7 +174,7 @@ void pllSetFreq(uint64_t freq, uint8_t bank) {
     /* Calculate the frequency register -- Application 144MHz (Usable only beetween : 106.25 - 212.5 MHz) */
     /* NOTE : AVR do NOT support double, and precision of float are insuffisant, so I use uint64... */
 
-    uint64_t pllVcoFreq  = freq * 128;
+    uint64_t pllVcoFreq  = freq * 32;
     uint64_t pllN        = pllVcoFreq / 10000000;
     
     uint64_t pllNint1    = pllN / 1000000;

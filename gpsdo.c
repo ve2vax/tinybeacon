@@ -179,8 +179,6 @@ int main (void) {
 	   	/* Start SEQ : Turn on the LED (pin 11) */
 		PORTD |= _BV(PORTD7);
 
-		//wsprSend(); // DEBUG
-
 		timeAlignPI4();
 		pi4sequence();
 

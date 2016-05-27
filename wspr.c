@@ -40,11 +40,11 @@
 #include <avr/pgmspace.h>
 
 
-#define WSPR_CALLSIGN             "F8KID "  // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
-#define WSPR_LOCATOR              "JN38"    // Exactly 4 characters (First part of the locator)
-#define WSPR_POWER                37        // Numerical value in dBm (range 0-60)
+#define WSPR_CALLSIGN             "VA2NQ "  // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
+#define WSPR_LOCATOR              "FN35"    // Exactly 4 characters (First part of the locator)
+#define WSPR_POWER                37        // Numerical value in dBm (range 0-60, check allowed values)
 
-#define WSPR_FREQUENCY            50294450.0
+#define WSPR_FREQUENCY            144490450.0
 
 #define WSPR_SYMBOLS_LENGTH       162       // The number of symbols in the WSPR transmission
 #define WSPR_SYMBOLS              162       // The number of symbols in the WSPR transmission

@@ -39,9 +39,9 @@
 #include <avr/pgmspace.h>
 
 
-#define PI4_MESSAGE              "F8KID   "   // UPDATE with your Callsign (8 chars, padding with spaces)
+#define PI4_MESSAGE              "VA2NQ   "   // UPDATE with your Callsign (8 chars, padding with spaces)
 
-#define PI4_FREQUENCY            50295000.0  // UPDATE with frequency aligned with the frequency bands
+#define PI4_FREQUENCY            144491000.0  // UPDATE with frequency aligned with the frequency bands
 
 #define PI4_SYMBOL_DURATION      166.667      // ms
 #define PI4_SYMBOLS              146          // The number of symbols in the PI4 transmission
