@@ -1,4 +1,3 @@
-<h1>Source code</h1>
 # TinyBeacon Projet (revC)
 
 *Work in progress*
