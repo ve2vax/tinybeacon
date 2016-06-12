@@ -1,6 +1,6 @@
-# TinyBeacon Project (revC) -- VHF/UHF radio beacon
+# TinyBeacon Project -- VHF/UHF radio beacon
 
-*Work in progress*
+*Work in progress -- rev.C*
 
 This code was written for the a set of radio beacons, usable on VHF and UHF radio-amateur bands. This firmware drives the components using SPI/I2C ports and manage the sequencer. Beacons can transmit WSPR and PI4 protocols (digital modes) but any other mode usable on class C could be used.
 Schematic and PCB layout will be ported on CircuitMaker, and release soon (ref. Rev.D). Previous version helped to improve the design and 4 beacons are now used successfully on air (Montreal, Canada - FN35).
