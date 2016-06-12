@@ -2,7 +2,7 @@
 
 *Work in progress -- rev.C*
 
-This code was written for the a set of radio beacons, usable on VHF and UHF radio-amateur bands. This firmware drives the components using SPI/I2C ports and manage the sequencer. Beacons can transmit WSPR and PI4 protocols (digital modes) but any other mode usable on class C could be used.
+This code was written for a set of radio beacons, usable on VHF and UHF radio-amateur bands. This firmware drives the components using SPI/I2C ports and manage the sequencer. Beacons can transmit WSPR and PI4 protocols (digital modes) but any other mode usable on class C could be used.
 Schematic and PCB layout will be ported on CircuitMaker, and release soon (ref. Rev.D). Previous version helped to improve the design and 4 beacons are now used successfully on air (Montreal, Canada - FN35).
 Schematic & PCB designs are offered for 50, 144, 222 & 432 MHz, using a credit card size format. The Output power is 5W (QRP) and the device tolerate an input power supply between 10 and 15V @1.5A max. Finally, the PLL is disciplined by GPS to provide an exact frequency carrier and allows WSPR mode.
 
