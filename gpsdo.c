@@ -170,6 +170,9 @@ int main (void) {
     gpsSet_CFG_RATE();
     _delay_ms(10);
 
+    /*** DEBUG ***/
+    wsprSend();
+
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
        - PI4 + Morse + Tone (1 minute)
