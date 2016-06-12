@@ -1,17 +1,17 @@
-/* 
+/*
  * FreeBSD License
- * Copyright (c) 2015, Guenael 
- * All rights reserved. 
- * 
+ * Copyright (c) 2015, Guenael
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 
@@ -53,16 +53,17 @@
 
 
 /* WSPR output symbols */
-static uint8_t Symbols[WSPR_SYMBOLS]; 
+static uint8_t Symbols[WSPR_SYMBOLS];
 
 /* Cross Vector */
-static const uint8_t PROGMEM wsprVector[] = { 
+static const uint8_t PROGMEM wsprVector[] = {
     1,1,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,0,1,0,0,1,0,1,1,1,1,0,0,0,0,0,
     0,0,1,0,0,1,0,1,0,0,0,0,0,0,1,0,1,1,0,0,1,1,0,1,0,0,0,1,1,0,1,0,
     0,0,0,1,1,0,1,0,1,0,1,0,1,0,0,1,0,0,1,0,1,1,0,0,0,1,1,0,1,0,1,0,
     0,0,1,0,0,0,0,0,1,0,0,1,0,0,1,1,1,0,1,1,0,0,1,1,0,1,0,0,0,1,1,1,
     0,0,0,0,0,1,0,1,0,0,1,1,0,0,0,0,0,0,0,1,1,0,1,0,1,1,0,0,0,1,1,0,
-    0,0 };
+    0,0
+};
 
 
 uint32_t wsprParity(uint64_t Value) {
@@ -82,8 +83,8 @@ void wsprEncode() {
     uint64_t power=WSPR_POWER;
 
     uint64_t n=0, m=0;
-    uint8_t  packed[11]={0};
-    
+    uint8_t  packed[11]= {0};
+
     /* Callsign encoding */
     n =          (callsign[0] >= '0' && callsign[0] <= '9' ? callsign[0] - '0' : callsign[0] == ' ' ? 36 : callsign[0] - 'A' + 10);
     n = n * 36 + (callsign[1] >= '0' && callsign[1] <= '9' ? callsign[1] - '0' : callsign[1] == ' ' ? 36 : callsign[1] - 'A' + 10);
@@ -115,14 +116,14 @@ void wsprEncode() {
     for (int8_t j=0; j<11; j++) {
         for (uint8_t i=0; i<8; i++) {
             N <<= 1;
-            if ( packed[j] & 1<<(7-i) ) 
+            if ( packed[j] & 1<<(7-i) )
                 N |= 1;
-    
+
             ConvEnc[t++] = wsprParity(N & 0xF2D05351);  // Poly1
             ConvEnc[t++] = wsprParity(N & 0xE4613C47);  // Poly2
         }
     }
-    
+
     /* Interleaving */
     uint32_t Interleaved[WSPR_SYMBOLS]; // FIX mem fill 0
     uint8_t P=0;
@@ -130,7 +131,7 @@ void wsprEncode() {
     memset (Interleaved, 0x00, WSPR_SYMBOLS);
     for (uint8_t i=0; i<255; i++) {
         for (uint8_t BitNo=0; BitNo<=7; BitNo++) {
-            if ((i >> BitNo) & 1) 
+            if ((i >> BitNo) & 1)
                 R |= 1 << (7-BitNo);
             else
                 R &= ~(1 << (7-BitNo));
@@ -139,11 +140,11 @@ void wsprEncode() {
         if ((P<WSPR_SYMBOLS) && (R<WSPR_SYMBOLS))
             Interleaved[R] = ConvEnc[P++];
     }
-    
+
     /*  Merge With Sync Vector */
     for (uint8_t i=0; i<WSPR_SYMBOLS; i++)
         Symbols[i] = pgm_read_byte(&wsprVector[i]) + (2*Interleaved[i]);
-        //Symbols[i] = pgm_read_byte(&wsprVector[i]) | (Interleaved[i] << 1);
+    //Symbols[i] = pgm_read_byte(&wsprVector[i]) | (Interleaved[i] << 1);
 }
 
 
@@ -161,7 +162,7 @@ void wsprSetFreqs(float carrierFreq) {
 
 void wsprSend() {
     wsprSetFreqs(WSPR_FREQUENCY);
-    
+
     // WSPR protocol start after 2 seconds
     _delay_ms(2000);
 

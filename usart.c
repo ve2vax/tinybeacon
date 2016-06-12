@@ -1,17 +1,17 @@
-/* 
+/*
  * FreeBSD License
- * Copyright (c) 2016, Guenael 
- * All rights reserved. 
- * 
+ * Copyright (c) 2016, Guenael
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 
@@ -61,7 +61,7 @@ void usartShutdown() {
 
 /* Receive a char on serial port (USART) */
 void usartGetChar(char *c) {
-    loop_until_bit_is_set(UCSR0A, RXC0); 
+    loop_until_bit_is_set(UCSR0A, RXC0);
     *c = UDR0;
 }
 
@@ -71,14 +71,14 @@ void usartSendChar(char *c) {
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = *c;
 }
-    
-    
+
+
 /* Receive a string on serial port (USART) */
 void usartGetString(char* str) {
     char tmp;
     do {
-        loop_until_bit_is_set(UCSR0A, RXC0);  
-        tmp = UDR0; 
+        loop_until_bit_is_set(UCSR0A, RXC0);
+        tmp = UDR0;
         *str++ = tmp;  // CAUTION : No buffer overflow check - Fixed length !!
     } while (tmp != '\x0A' && tmp != '\x0D' && tmp != '\x00');
     *str = '\x00';

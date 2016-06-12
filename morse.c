@@ -1,17 +1,17 @@
-/* 
+/*
  * FreeBSD License
- * Copyright (c) 2016, Guenael 
- * All rights reserved. 
- * 
+ * Copyright (c) 2016, Guenael
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 
@@ -55,11 +55,10 @@ char charMorse(char c) {
 
     if ( (c == 0) || (c == ' ') )
         return(0);     // Not a valid morse character
+    else if (c < 'A')  // Get then Morse pattern
+        return(Numbers[c - '/']);
     else
-        if (c < 'A')   // Get then Morse pattern
-            return(Numbers[c - '/']);
-        else
-            return(Letters[c - 'A']);
+        return(Letters[c - 'A']);
 }
 
 
@@ -74,18 +73,18 @@ void morseSendString(char* str) {
         for (uint8_t j=0; j<morseLength; j++) {
             pllRfOutput(1);
 
-            if ((morseChar & 0x80) == 0x80)         // If MSB 0 = dot, 1 = dash, 
+            if ((morseChar & 0x80) == 0x80)         // If MSB 0 = dot, 1 = dash,
                 _delay_ms(MORSE_DOT_DURATION * 3);  // It is a dash, so wait 3 dot durations
-            else 
+            else
                 _delay_ms(MORSE_DOT_DURATION);      // It is a dot, so wait 1 dot duration
 
             pllRfOutput(0);
             _delay_ms(MORSE_DOT_DURATION);
-            morseChar = morseChar <<1;              // Point to next bit 
-        }   
-    _delay_ms(MORSE_DOT_DURATION * 4);              // Inter morse character pause
-    str++;
-    } 
+            morseChar = morseChar <<1;              // Point to next bit
+        }
+        _delay_ms(MORSE_DOT_DURATION * 4);              // Inter morse character pause
+        str++;
+    }
 }
 
 
@@ -100,18 +99,18 @@ void morse2TonesSendString(char* str) {
         for (uint8_t j=0; j<morseLength; j++) {
             pllUpdate(1);
 
-            if ((morseChar & 0x80) == 0x80)         // If MSB 0 = dot, 1 = dash, 
+            if ((morseChar & 0x80) == 0x80)         // If MSB 0 = dot, 1 = dash,
                 _delay_ms(MORSE_DOT_DURATION * 3);  // It is a dash, so wait 3 dot durations
-            else 
+            else
                 _delay_ms(MORSE_DOT_DURATION);      // It is a dot, so wait 1 dot duration
 
             pllUpdate(0);
             _delay_ms(MORSE_DOT_DURATION);
-            morseChar = morseChar <<1;              // Point to next bit 
-        }   
-    _delay_ms(MORSE_DOT_DURATION * 4);              // Inter morse character pause
-    str++;
-    } 
+            morseChar = morseChar <<1;              // Point to next bit
+        }
+        _delay_ms(MORSE_DOT_DURATION * 4);              // Inter morse character pause
+        str++;
+    }
 }
 
 void morseSendMessage() {
@@ -122,7 +121,7 @@ void morseSendMessage() {
 
     pllPA(1);
     pllRfOutput(1);
-    
+
     /* Send the message in CW */
     morseSendString(MORSE_MESSAGE);
 
@@ -140,7 +139,7 @@ void morse2TonesSendMessage() {
 
     pllPA(1);
     pllRfOutput(1);
-    
+
     /* Send the message in CW */
     morse2TonesSendString(MORSE_MESSAGE);
 

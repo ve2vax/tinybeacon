@@ -1,17 +1,17 @@
-/* 
+/*
  * FreeBSD License
- * Copyright (c) 2016, Guenael 
- * All rights reserved. 
- * 
+ * Copyright (c) 2016, Guenael
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 
@@ -34,7 +34,7 @@
    |  - QRP, 5W output power                                           |
    |  - 10 MHz oscillator stabilized by GPS (GPSDO)                    |
    |  - DC-DC Power supply within 10-15V, 1.5A max                     |
-   |  - Compatible with WSPR & PI4 protocols                           | 
+   |  - Compatible with WSPR & PI4 protocols                           |
    |                                                                   |
    |                                                                   |
    |  IO Mapping uController, rev.C                                    |
@@ -47,10 +47,10 @@
    |  - PD6      (pin 10) | PA EN                                      |
    |  - PD7      (pin 11) | INFO LED                                   |
    |  - PB0      (pin 12) | PLL LOCK                                   |
-   |  - PB2      (pin 14) | PLL EN                                     | 
+   |  - PB2      (pin 14) | PLL EN                                     |
    |                                                                   |
    |                                                                   |
-   |  VA2NQ Beacon -- Frequency band plan                              |
+   |  Example : VA2NQ Beacon -- Frequency band plan                    |
    |                                                                   |
    |   BAND | CW/PI4 Frequency | WSPR Frequency | PLL Reg. 6           |
    |--------|------------------|----------------|----------------------|
@@ -78,120 +78,122 @@
 
 
 void timeAlignPI4() {
-	/* Update the GPS data for the next time align */
-	gpsGetNMEA();
-	gpsExtractStrings();
+    /* Update the GPS data for the next time align */
+    gpsGetNMEA();
+    gpsExtractStrings();
 
-	/* Align on an minute for the next message */
-	gpsTimeAling1Mb();
+    /* Align on an minute for the next message */
+    gpsTimeAling1Mb();
 }
 
 
 void timeAlignWSPR() {
-	/* Update the GPS data for the next time align */
-	gpsGetNMEA();
-	gpsExtractStrings();
+    /* Update the GPS data for the next time align */
+    gpsGetNMEA();
+    gpsExtractStrings();
 
-	/* Align on odd minute for the next message */
-	gpsTimeAling2Mb();
+    /* Align on odd minute for the next message */
+    gpsTimeAling2Mb();
 }
 
 
 void pi4sequence() {
-	/* 1st part : Send PI4 message, 25 sec */
-	pi4Send();
+    /* 1st part : Send PI4 message, 25 sec */
+    pi4Send();
 
-	/* 2nd part : Send morse message */
-	morse2TonesSendMessage();
+    /* 2nd part : Send morse message */
+    morse2TonesSendMessage();
 
-	/* 3th part : Send a carrier, 10 sec, same frequency */
-	pllUpdate(1);
-	pllPA(1);
-	pllRfOutput(1);
-	_delay_ms(10000);
-	pllRfOutput(0);
-	pllPA(0);
+    /* 3th part : Send a carrier, 10 sec, same frequency */
+    pllUpdate(1);
+    pllPA(1);
+    pllRfOutput(1);
+    _delay_ms(10000);
+    pllRfOutput(0);
+    pllPA(0);
 }
 
 
 int main (void) {
-	/* CKDIV8 fuse is set -- Frequency is divided by 8 at start : 2.5MHz */
-	cli();
-	CLKPR = _BV(CLKPCE);  // Enable change of CLKPS bits
-	CLKPR = 0;            // Set prescaler to 0 = Restore system clock to 10 MHz
-	sei();
+    /* CKDIV8 fuse is set -- Frequency is divided by 8 at start : 2.5MHz */
+    cli();
+    CLKPR = _BV(CLKPCE);  // Enable change of CLKPS bits
+    CLKPR = 0;            // Set prescaler to 0 = Restore system clock to 10 MHz
+    sei();
 
     /* DEBUG Enable I2C output */
     DDRC   |= _BV(DDC4);  // Enable output
     DDRC   |= _BV(DDC5);  // Enable output
 
-	/* LED : Set pin 11 of PORT-PD7 for output*/
-	DDRD |= _BV(DDD7);
+    /* LED : Set pin 11 of PORT-PD7 for output*/
+    DDRD |= _BV(DDD7);
 
-	/* Peform the sub-modules initialisation */
-	twi_init();
-	_delay_ms(10);
+    /* Peform the sub-modules initialisation */
+    twi_init();
+    _delay_ms(10);
 
-	/* Enable GPS for time sync, osc & locator */
-	gpsInit();  // I2C Have to be init before the PLL !
-	_delay_ms(10);
+    /* Enable GPS for time sync, osc & locator */
+    gpsInit();  // I2C Have to be init before the PLL !
+    _delay_ms(10);
 
-	/* Init for the AD PLL */
-	pllInit();
-	_delay_ms(10);
-	
-	/* Set the default I2C address of the PLL */
-	gpsSetAddr(0x42);
-	_delay_ms(10);
+    /* Init for the AD PLL */
+    pllInit();
+    _delay_ms(10);
 
-	/* For now, used for DEBUG purpose only. Future : CLI for freq settings & modes */
-	usartInit();
-	_delay_ms(10);
+    /* Set the default I2C address of the PLL */
+    gpsSetAddr(0x42);
+    _delay_ms(10);
 
-	/* ADF4355-2 init & settings */
-	pllProgramInit();
-	_delay_ms(10);
+    /* For now, used for DEBUG purpose only. Future : CLI for freq settings & modes */
+    usartInit();
+    _delay_ms(10);
 
-	/* Prepare the message to encode for PI4 message */
-	pi4Encode();
+    /* ADF4355-2 init & settings */
+    pllProgramInit();
+    _delay_ms(10);
 
-	/* Prepare the message to encode for WSPR message */
-	wsprEncode();
+    /* Prepare the message to encode for PI4 message */
+    pi4Encode();
 
-	/* Update the GPS data for the next time align */
-	gpsGetNMEA();
-	gpsExtractStrings();
+    /* Prepare the message to encode for WSPR message */
+    wsprEncode();
 
-	/* uBlox 10MHz timing settings */
-	gpsSet_CFG_TP5();
-	_delay_ms(10);
+    /* Update the GPS data for the next time align */
+    gpsGetNMEA();
+    gpsExtractStrings();
 
-	/* uBlox high refresh rate for timing */
-	gpsSet_CFG_RATE();
-	_delay_ms(10);
+    /* uBlox 10MHz timing settings */
+    gpsSet_CFG_TP5();
+    _delay_ms(10);
 
-	/* Loop sequence :
-	   - PI4 + Morse + Tone (1 minute)
-	   - PI4 + Morse + Tone (1 minute)
-	   - WSPR (2 minutes)
-	*/
-	while(1) {
-	   	/* Start SEQ : Turn on the LED (pin 11) */
-		PORTD |= _BV(PORTD7);
+    /* uBlox high refresh rate for timing */
+    gpsSet_CFG_RATE();
+    _delay_ms(10);
 
-		timeAlignPI4();
-		pi4sequence();
+    /* Loop sequence :
+       - PI4 + Morse + Tone (1 minute)
+       - PI4 + Morse + Tone (1 minute)
+       - WSPR (2 minutes)
+    */
+    while(1) {
+        /* Start SEQ : Turn on the LED (pin 11) */
+        PORTD |= _BV(PORTD7);
 
-		timeAlignPI4();
-		pi4sequence();
+        wsprSend();
 
-		timeAlignWSPR(); 
-		wsprSend();
+        timeAlignPI4();
+        pi4sequence();
 
-		/* End SEQ : Turn off the LED (pin 11) */
-		PORTD &= ~_BV(PORTD7);
-	}
+        timeAlignPI4();
+        pi4sequence();
 
-	/* This case never happens :) Useless without powermanagement... */
-	return 0;
+        timeAlignWSPR();
+        wsprSend();
+
+        /* End SEQ : Turn off the LED (pin 11) */
+        PORTD &= ~_BV(PORTD7);
+    }
+
+    /* This case never happens :) Useless without powermanagement... */
+    return 0;
 }

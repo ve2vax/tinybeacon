@@ -1,17 +1,17 @@
-/* 
+/*
  * FreeBSD License
- * Copyright (c) 2016, Guenael 
- * All rights reserved. 
- * 
+ * Copyright (c) 2016, Guenael
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 
@@ -41,12 +41,12 @@
 
 
 /* Global definition for the I2C GPS address */
-static uint8_t gpsAddr;     
+static uint8_t gpsAddr;
 
 
 /* Local/Private structrues for this processing code */
 typedef struct gpsDataStruct {
-    uint32_t  itow; 
+    uint32_t  itow;
     uint16_t  year;
     uint8_t   month;
     uint8_t   day;
@@ -93,7 +93,7 @@ static const uint8_t PROGMEM CFG_TP5[] = {
     0x20, 0x00,             // Length
     0x00,                   // tpIdx
     0x01,                   // version
-    0x00, 0x00,             // reserved1 
+    0x00, 0x00,             // reserved1
     0x00, 0x00,             // antCableDelay
     0x00, 0x00,             // rfGroupDelay
     0x01, 0x00, 0x00, 0x00, // freqPeriod = 1 Hz
@@ -157,7 +157,7 @@ void gpsInit() {
 
 
 void gpsShutdown() {
-     
+
 }
 
 
@@ -175,7 +175,7 @@ void gpsSet_CFG_TP5() {
 
 void gpsSet_CFG_RATE() {
     twi_writeToPgm(gpsAddr, CFG_RATE, sizeof(CFG_RATE), 1, 0);
-    _delay_ms(100);  
+    _delay_ms(100);
 }
 
 
@@ -187,7 +187,7 @@ void gpsSet_CFG_PRT() {
 
 void gpsPoll_NAV_PVT() {
     twi_writeToPgm(gpsAddr, NAV_PVT, sizeof(NAV_PVT), 1, 0);
-    _delay_ms(1);    
+    _delay_ms(1);
 }
 
 
@@ -215,11 +215,11 @@ void gpsFlushBuffer() {
     /* Point on the bytes available (Register Adressing) */
     twi_writeTo(gpsAddr, &cmd, 1, 1, 0);  // 0xFD & 0xFE for the 16 bit register
     _delay_ms(1);
-    
+
     /* Read the effective buffered byte on the GPS uProcessor */
     if(!twi_readFrom(gpsAddr, (uint8_t*) &byteToRead, 2, 0))
         return;
-    
+
     byteToRead = ((byteToRead>>8) | (byteToRead<<8));  // Little endian conversion
 
     while (byteToRead--)
@@ -235,19 +235,19 @@ void gpsGetNMEA() {
     uint8_t  cmd2 = 0xFF;
 
     /* GPS locked flag (incremented at each valid line) */
-    uint8_t  valid = 0;     
+    uint8_t  valid = 0;
 
     /* Clean the structures */
-    memset(&lGpsData, 0, sizeof(lGpsData));  
-    memset(&lGpsString, 0, sizeof(lGpsString));  
-    
+    memset(&lGpsData, 0, sizeof(lGpsData));
+    memset(&lGpsString, 0, sizeof(lGpsString));
+
     /* Free space for the raw input */
     data = malloc(100 * sizeof(uint8_t));
-    memset(data, 0, 100 * sizeof(uint8_t)); 
+    memset(data, 0, 100 * sizeof(uint8_t));
 
     /* Setup & restrict the DDC port only */
     gpsSet_CFG_PRT();
-    
+
     while (!valid) {  // 3 minute max to get a full sync
         gpsFlushBuffer();
 
@@ -256,11 +256,11 @@ void gpsGetNMEA() {
         /* Point on the bytes available (Register Adressing) */
         twi_writeTo(gpsAddr, &cmd, 1, 1, 0);  // 0xFD & 0xFE for the 16 bit register
         _delay_ms(1);
-        
+
         /* Read the effective buffered byte on the GPS uProcessor */
         if(!twi_readFrom(gpsAddr, (uint8_t*) &byteToRead, 2, 0))
             continue;
-        
+
         byteToRead = ((byteToRead>>8) | (byteToRead<<8));  // Little endian conversion
 
         /* Free the buffer if unexpected size */
@@ -329,7 +329,7 @@ void gpsExtractStrings() {
     lGpsString.posLon[7] = lGpsString.posLon[6];
     lGpsString.posLon[6] = lGpsString.posLon[5];
     lGpsString.posLon[5] = '.';
-    
+
     /* N/S E/W flags */
     lGpsString.posLatDir[0] = (lGpsData.lat >= 0)? 'N' : 'S';
     lGpsString.posLonDir[0] = (lGpsData.lon >= 0)? 'E' : 'W';
@@ -380,10 +380,10 @@ void gpsTimeAling1M() {
 
     // _delay_ms function support only const... :(
     while (sec--)
-      _delay_ms(1000);
+        _delay_ms(1000);
 
     while (nano--)
-      _delay_ms(1);
+        _delay_ms(1);
 }
 
 
@@ -391,19 +391,19 @@ void gpsTimeAling2M() {
     uint8_t min = lGpsData.minutes;
     uint8_t sec = 59 - lGpsData.seconds;
     int32_t nano = 1000 - (lGpsData.nano/1000000);
-    
+
     // FIXME - CHECK
     if(sec > 60) sec=60;
     if(nano > 1000) nano=1000;
 
     if (!(min % 2))
-         _delay_ms(60000);
-    
+        _delay_ms(60000);
+
     while (sec--)
         _delay_ms(1000);
 
     while (nano--)
-      _delay_ms(1);    
+        _delay_ms(1);
 }
 
 
@@ -411,7 +411,7 @@ void gpsTimeAling1Mb() {
     uint32_t milli = 60000 - (((lGpsData.itow % 60000) + 43000)% 60000) ; // 17 = leapSecond (60-17=43)
 
     while (milli--)
-      _delay_ms(1);
+        _delay_ms(1);
 }
 
 
@@ -419,7 +419,7 @@ void gpsTimeAling2Mb() {
     uint32_t milli = 120000 - ((lGpsData.itow - 17000)% 120000) ; // 17 = leapSecond
 
     while (milli--)
-      _delay_ms(1);
+        _delay_ms(1);
 }
 
 

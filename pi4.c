@@ -1,17 +1,17 @@
-/* 
+/*
  * FreeBSD License
- * Copyright (c) 2016, Guenael 
- * All rights reserved. 
- * 
+ * Copyright (c) 2016, Guenael
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 
@@ -49,16 +49,17 @@
 
 
 /* PI4 output symbols */
-static uint8_t Symbols[PI4_SYMBOLS]; 
+static uint8_t Symbols[PI4_SYMBOLS];
 
 /* Encoding stuff */
 static const uint8_t PI4Chars[]          = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ /";
-static const uint8_t PI4Vector[] PROGMEM = { 
+static const uint8_t PI4Vector[] PROGMEM = {
     0,0,1,0,0,1,1,1,1,0,1,0,1,0,1,0,0,1,0,0,0,1,0,0,0,1,1,0,0,1,
     1,1,1,0,0,1,1,1,1,1,0,0,1,1,0,1,1,1,1,0,1,0,1,1,0,1,1,0,1,0,
     0,0,0,0,1,1,1,1,1,0,1,0,1,0,0,0,0,0,1,1,1,1,1,0,1,0,0,1,0,0,
     1,0,1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,1,1,1,
-    0,1,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0,1,1,1,0,0,0,0,1,1 };
+    0,1,1,1,0,1,1,0,1,0,1,0,1,0,0,0,0,1,1,1,0,0,0,0,1,1
+};
 
 
 uint32_t Parity(uint64_t Value) {
@@ -107,7 +108,7 @@ void PI4MakeMessage(char *msg) {
 
         ConvEnc[t++] = Parity(n & 0xF2D05351);  // Poly1
         ConvEnc[t++] = Parity(n & 0xE4613C47);  // Poly2
-    } 
+    }
 
     /* Interleaving */
     uint8_t P=0;
@@ -117,7 +118,7 @@ void PI4MakeMessage(char *msg) {
 
     for (uint16_t i=0; i<=255; i++) {                                  // FIXME/CHECK
         for (uint8_t BitNo=0; BitNo<=7; BitNo++) {
-            if ((i >> BitNo) & 1) 
+            if ((i >> BitNo) & 1)
                 R |= 1 << (7-BitNo);
             else
                 R &= ~(1 << (7-BitNo));
@@ -146,7 +147,7 @@ void pi4SetFreqs(float carrierFreq) {
 
 void pi4Encode() { // FIXME useless function...
     /* PI4 Message encoding - Part 1 */
-    PI4MakeMessage(PI4_MESSAGE);   
+    PI4MakeMessage(PI4_MESSAGE);
 }
 
 
