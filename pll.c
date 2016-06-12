@@ -131,6 +131,7 @@ void pllProgramInit() {
     pllTransmitWord(pllGeneralSettings[2]);
     pllTransmitWord(pllGeneralSettings[1]);
     pllTransmitWord(pllGeneralSettings[0]);
+    _delay_ms(100);
 }
 
 

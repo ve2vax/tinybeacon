@@ -1,6 +1,6 @@
 CC=avr-gcc
 OBJCPY=avr-objcopy
-CFLAGS= -Wall -g -Os -std=c99 -ffunction-sections -fdata-sections -MMD -mmcu=atmega328p
+CFLAGS= -Wall -Os -std=c99 -ffunction-sections -fdata-sections -MMD -mmcu=atmega328p
 LDFLAGS = -Wall -Os -Wl,--gc-sections,--relax -mmcu=atmega328p
 LIBS = -lm
 
@@ -16,7 +16,7 @@ gpsdo: $(OBJ)
 	avr-size -C --mcu=atmega328p gpsdo.elf
 
 burn:
-	avrdude -c usbtiny -p ATMEGA328P -v -U flash:w:gpsdo.hex -U lfuse:w:0x60:m -U hfuse:w:0xd8:m -U efuse:w:0x05:m
+	avrdude -c usbtiny -p ATMEGA328P -v -U flash:w:gpsdo.hex -U lfuse:w:0x60:m -U hfuse:w:0xd8:m -U efuse:w:0xfd:m
 
 clean:
 	rm -f *.o *.d *.elf *.hex

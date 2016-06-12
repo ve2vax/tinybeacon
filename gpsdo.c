@@ -79,8 +79,9 @@
 
 void timeAlignPI4() {
     /* Update the GPS data for the next time align */
-    gpsGetNMEA();
+    gpsGetPVT();
     gpsExtractStrings();
+    gpsGetTime();
 
     /* Align on an minute for the next message */
     gpsTimeAling1Mb();
@@ -89,8 +90,9 @@ void timeAlignPI4() {
 
 void timeAlignWSPR() {
     /* Update the GPS data for the next time align */
-    gpsGetNMEA();
+    gpsGetPVT();
     gpsExtractStrings();
+    gpsGetTime();
 
     /* Align on odd minute for the next message */
     gpsTimeAling2Mb();
@@ -115,7 +117,7 @@ void pi4sequence() {
 
 
 int main (void) {
-    /* CKDIV8 fuse is set -- Frequency is divided by 8 at start : 2.5MHz */
+    /* CKDIV8 fuse is set -- Frequency is divided by 8 at startup : 2.5MHz */
     cli();
     CLKPR = _BV(CLKPCE);  // Enable change of CLKPS bits
     CLKPR = 0;            // Set prescaler to 0 = Restore system clock to 10 MHz
@@ -128,29 +130,39 @@ int main (void) {
     /* LED : Set pin 11 of PORT-PD7 for output*/
     DDRD |= _BV(DDD7);
 
-    /* Peform the sub-modules initialisation */
-    twi_init();
-    _delay_ms(10);
-
-    /* Enable GPS for time sync, osc & locator */
-    gpsInit();  // I2C Have to be init before the PLL !
-    _delay_ms(10);
-
-    /* Init for the AD PLL */
-    pllInit();
-    _delay_ms(10);
-
-    /* Set the default I2C address of the PLL */
-    gpsSetAddr(0x42);
-    _delay_ms(10);
-
     /* For now, used for DEBUG purpose only. Future : CLI for freq settings & modes */
     usartInit();
     _delay_ms(10);
 
-    /* ADF4355-2 init & settings */
-    pllProgramInit();
+    /* Peform I2C modules init */
+    twi_init();
     _delay_ms(10);
+
+    /* uBlox/I2C : Set the default I2C address of the GPS */
+    gpsSetAddr(0x42);
+
+    /* uBlox : GPS IO init. */
+    gpsInit();  // I2C Have to be init before the PLL !
+
+    /* uBlox : Rstrict DDC port only */
+    gpsSet_CFG_PRT();
+
+    /* uBlox : 10MHz timing setup */
+    gpsSet_CFG_TP5();
+
+    /* uBlox : Refresh rate for internal GPSDO alignment */
+    gpsSet_CFG_RATE();
+
+    /* uBlox : Wait on a full GPS sync (+ info req. for message encoding)*/
+    gpsGetPVT();
+    gpsExtractStrings();
+    gpsGetTime();
+
+    /* ADF4355 PLL Init */
+    pllInit();
+
+    /* ADF4355 conf & settings */
+    pllProgramInit();
 
     /* Prepare the message to encode for PI4 message */
     pi4Encode();
@@ -158,20 +170,11 @@ int main (void) {
     /* Prepare the message to encode for WSPR message */
     wsprEncode();
 
-    /* Update the GPS data for the next time align */
-    gpsGetNMEA();
-    gpsExtractStrings();
-
-    /* uBlox 10MHz timing settings */
-    gpsSet_CFG_TP5();
-    _delay_ms(10);
-
-    /* uBlox high refresh rate for timing */
-    gpsSet_CFG_RATE();
-    _delay_ms(10);
+    /* End of init sequence : Turn on the LED (pin 11) */
+    PORTD |= _BV(PORTD7);
 
     /*** DEBUG ***/
-    wsprSend();
+    //wsprSend();
 
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
@@ -179,11 +182,6 @@ int main (void) {
        - WSPR (2 minutes)
     */
     while(1) {
-        /* Start SEQ : Turn on the LED (pin 11) */
-        PORTD |= _BV(PORTD7);
-
-        wsprSend();
-
         timeAlignPI4();
         pi4sequence();
 
@@ -192,9 +190,6 @@ int main (void) {
 
         timeAlignWSPR();
         wsprSend();
-
-        /* End SEQ : Turn off the LED (pin 11) */
-        PORTD &= ~_BV(PORTD7);
     }
 
     /* This case never happens :) Useless without powermanagement... */

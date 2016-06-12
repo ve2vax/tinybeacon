@@ -40,7 +40,11 @@
 #include <string.h>
 
 
-/* Global definition for the I2C GPS address */
+
+#include "usart.h"
+
+
+/* Global definition for I2C GPS address */
 static uint8_t gpsAddr;
 
 
@@ -60,6 +64,7 @@ typedef struct gpsDataStruct {
     int32_t   speed;   // in mm/s, factor 1e-3
     uint8_t   numsat;
     int32_t   head;    // factor 1e-5, in deg.
+    uint32_t  leapsec;
 } gpsData;
 
 
@@ -82,9 +87,10 @@ typedef struct gpsStringStruct {
 } gpsString;
 
 
-/* Declaration of goblal structrues & variables */
-gpsData    lGpsData;    // Structure with all raw GPS data
-gpsString  lGpsString;  // Structure with all extracted/computed GPS data
+/* Goblal structrues & variables declaration */
+static gpsData    lGpsData;    // Structure with all raw GPS data
+static gpsString  lGpsString;  // Structure with all extracted/computed GPS data
+// FIXME : global def, is static req. ?
 
 
 static const uint8_t PROGMEM CFG_TP5[] = {
@@ -139,6 +145,14 @@ static const uint8_t PROGMEM NAV_PVT[] = {
 };
 
 
+static const uint8_t PROGMEM NAV_TIMEGPS[] = {
+    0xB5, 0x62,             // Header
+    0x01, 0x20,             // ID
+    0x00, 0x00,             // Length
+    0x21, 0x64              // CRC
+};
+
+
 void gpsInit() {
     /* GPS EXTINT : set pin 9 of PORT-PD5 for output*/
     DDRD |= _BV(DDD5);
@@ -153,6 +167,10 @@ void gpsInit() {
     //DDRD |= _BV(DDD5);
     /* GPS not disable  */
     //PORTD |= _BV(PORTD5);
+
+    // FIXME -- add here ? check
+    /* Setup & restrict the DDC port only */
+    //gpsSet_CFG_PRT();
 }
 
 
@@ -181,13 +199,19 @@ void gpsSet_CFG_RATE() {
 
 void gpsSet_CFG_PRT() {
     twi_writeToPgm(gpsAddr, CFG_PRT, sizeof(CFG_PRT), 1, 0);
-    _delay_ms(1);
+    _delay_ms(100);
 }
 
 
 void gpsPoll_NAV_PVT() {
     twi_writeToPgm(gpsAddr, NAV_PVT, sizeof(NAV_PVT), 1, 0);
-    _delay_ms(1);
+    _delay_ms(100);
+}
+
+
+void gpsPoll_NAV_TIMEGPS() {
+    twi_writeToPgm(gpsAddr, NAV_TIMEGPS, sizeof(NAV_TIMEGPS), 1, 0);
+    _delay_ms(100);
 }
 
 
@@ -227,7 +251,7 @@ void gpsFlushBuffer() {
 }
 
 
-void gpsGetNMEA() {
+void gpsGetPVT() {
     uint16_t byteToRead;
     uint8_t  *data;
 
@@ -245,10 +269,7 @@ void gpsGetNMEA() {
     data = malloc(100 * sizeof(uint8_t));
     memset(data, 0, 100 * sizeof(uint8_t));
 
-    /* Setup & restrict the DDC port only */
-    gpsSet_CFG_PRT();
-
-    while (!valid) {  // 3 minute max to get a full sync
+    while (!valid) { 
         gpsFlushBuffer();
 
         gpsPoll_NAV_PVT();
@@ -275,7 +296,14 @@ void gpsGetNMEA() {
             }
 
             /* Check the validity of the data */
-            if ((data[17] & 0x07) == 0x07) {
+            if ( (data[0] == 0xB5) &&
+                 (data[1] == 0x62) &&
+                 (data[2] == 0x01) &&
+                 (data[3] == 0x07) &&
+                 (data[4] == 0x5C) &&
+                 (data[5] == 0x00) &&
+                 ((data[17] & 0x07) == 0x07) ) {
+
                 /* Extract usefull data */
                 lGpsData.itow    = *(uint32_t*) &data[6];
                 lGpsData.year    = *(uint16_t*) &data[10];
@@ -303,6 +331,64 @@ void gpsGetNMEA() {
     /* Raw data no longer needed */
     free(data);
 }
+
+
+void gpsGetTime() {
+    uint16_t byteToRead;
+    uint8_t  data[32]={0};
+    uint8_t  valid = 0;
+
+    uint8_t  cmd = 0xFD;
+    uint8_t  cmd2 = 0xFF;
+
+    while (!valid) {  // 3 minute max to get a full sync
+        gpsFlushBuffer();
+
+        gpsPoll_NAV_TIMEGPS();
+
+        /* Point on the bytes available (Register Adressing) */
+        twi_writeTo(gpsAddr, &cmd, 1, 1, 0);  // 0xFD & 0xFE for the 16 bit register
+        _delay_ms(1);
+
+        /* Read the effective buffered byte on the GPS uProcessor */
+        if(!twi_readFrom(gpsAddr, (uint8_t*) &byteToRead, 2, 0))
+            continue;
+
+        byteToRead = ((byteToRead>>8) | (byteToRead<<8));  // Little endian conversion
+
+        /* Free the buffer if unexpected size */
+        if (byteToRead != 24)
+            continue;
+        
+        /* Point on the stream buffer (Register Adressing) */
+        twi_writeTo(gpsAddr, &cmd2, 1, 1, 0);  // 0xFF = StreamBuffer
+        _delay_ms(1);
+
+        /* Read all the buffer */
+        for (uint8_t i=0; i<byteToRead; i++) {
+            twi_readFrom(gpsAddr, &data[i], 1, 0);
+        }
+
+        /* Check the validity of the data */
+        if ( (data[0] == 0xB5) &&
+             (data[1] == 0x62) &&
+             (data[2] == 0x01) &&
+             (data[3] == 0x20) &&
+             (data[4] == 0x10) &&
+             (data[5] == 0x00) &&
+             ((data[17] & 0x04) == 0x04) ) {  // Check leapsecond flag validity
+
+            /* Extract usefull data (ITOW & LeapSecodn)*/
+            //lGpsData.itow    = *(uint32_t*) &data[6];    // FIXME : assignment makes integer from pointer without a cast
+            lGpsData.leapsec = 1000 * (uint32_t)*(int8_t*) &data[16]; // leap seconds in ms
+            valid++;
+
+        } else {
+            _delay_ms(100);
+        }
+    }
+}
+
 
 
 void gpsExtractStrings() {
@@ -408,7 +494,7 @@ void gpsTimeAling2M() {
 
 
 void gpsTimeAling1Mb() {
-    uint32_t milli = 60000 - (((lGpsData.itow % 60000) + 43000)% 60000) ; // 17 = leapSecond (60-17=43)
+    uint32_t milli = 60000 - ((lGpsData.itow - lGpsData.leapsec)% 60000);
 
     while (milli--)
         _delay_ms(1);
@@ -416,7 +502,7 @@ void gpsTimeAling1Mb() {
 
 
 void gpsTimeAling2Mb() {
-    uint32_t milli = 120000 - ((lGpsData.itow - 17000)% 120000) ; // 17 = leapSecond
+    uint32_t milli = 120000 - ((lGpsData.itow - lGpsData.leapsec)% 120000);
 
     while (milli--)
         _delay_ms(1);
@@ -491,3 +577,24 @@ char* getNumSat() {
 char* getSeq() {
     return lGpsString.seq;
 }
+
+
+/* DEBUG
+
+#include "usart.h"
+usartSendString("IN!!!\n");
+char tmp[64];
+sprintf(tmp, "%x-%x-%x-%x-%x-%x\n", data[0], data[1], data[2], data[3], data[4], data[5]);
+usartSendString(tmp);
+sprintf(tmp, "DEBUG leapSec = %d\n", data[16]);
+usartSendString(tmp);
+sprintf(tmp, "flag= %d\n", data[17]);
+usartSendString(tmp);
+
+#include "usart.h"
+usartSendString("TEST\n");
+char tmp[64];
+sprintf(tmp, "DEBUG leapSec = %d\n", lGpsData.leapsec);
+usartSendString(tmp);
+
+*/
