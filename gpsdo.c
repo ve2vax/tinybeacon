@@ -78,9 +78,7 @@
 
 
 void timeAlignPI4() {
-    /* Update the GPS data for the next time align */
-    gpsGetPVT();
-    gpsExtractStrings();
+    /* Get GPS data for the next time sync */
     gpsGetTime();
 
     /* Align on an minute for the next message */
@@ -89,9 +87,7 @@ void timeAlignPI4() {
 
 
 void timeAlignWSPR() {
-    /* Update the GPS data for the next time align */
-    gpsGetPVT();
-    gpsExtractStrings();
+    /* Get GPS data for the next time sync */
     gpsGetTime();
 
     /* Align on odd minute for the next message */

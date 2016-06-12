@@ -261,13 +261,8 @@ void gpsGetPVT() {
     /* GPS locked flag (incremented at each valid line) */
     uint8_t  valid = 0;
 
-    /* Clean the structures */
-    memset(&lGpsData, 0, sizeof(lGpsData));
-    memset(&lGpsString, 0, sizeof(lGpsString));
-
     /* Free space for the raw input */
     data = malloc(100 * sizeof(uint8_t));
-    memset(data, 0, 100 * sizeof(uint8_t));
 
     while (!valid) { 
         gpsFlushBuffer();
@@ -285,49 +280,49 @@ void gpsGetPVT() {
         byteToRead = ((byteToRead>>8) | (byteToRead<<8));  // Little endian conversion
 
         /* Free the buffer if unexpected size */
-        if (byteToRead == 100) {
-            /* Point on the stream buffer (Register Adressing) */
-            twi_writeTo(gpsAddr, &cmd2, 1, 1, 0);  // 0xFF = StreamBuffer
-            _delay_ms(1);
+        if (byteToRead != 100)
+            continue;
 
-            /* Read all the buffer */
-            for (uint8_t i=0; i<byteToRead; i++) {
-                twi_readFrom(gpsAddr, &data[i], 1, 0);
-            }
+        /* Point on the stream buffer (Register Adressing) */
+        twi_writeTo(gpsAddr, &cmd2, 1, 1, 0);  // 0xFF = StreamBuffer
+        _delay_ms(1);
 
-            /* Check the validity of the data */
-            if ( (data[0] == 0xB5) &&
-                 (data[1] == 0x62) &&
-                 (data[2] == 0x01) &&
-                 (data[3] == 0x07) &&
-                 (data[4] == 0x5C) &&
-                 (data[5] == 0x00) &&
-                 ((data[17] & 0x07) == 0x07) ) {
+        /* Read all the buffer */
+        for (uint8_t i=0; i<byteToRead; i++) {
+            twi_readFrom(gpsAddr, &data[i], 1, 0);
+        }
 
-                /* Extract usefull data */
-                lGpsData.itow    = *(uint32_t*) &data[6];
-                lGpsData.year    = *(uint16_t*) &data[10];
-                lGpsData.month   =               data[12];
-                lGpsData.day     =               data[13];
-                lGpsData.hours   =               data[14];
-                lGpsData.minutes =               data[15];
-                lGpsData.seconds =               data[16];
-                lGpsData.nano    = *(int32_t*)  &data[22];
-                lGpsData.lon     = *(int32_t*)  &data[30];
-                lGpsData.lat     = *(int32_t*)  &data[34];
-                lGpsData.height  = *(int32_t*)  &data[38];
-                lGpsData.speed   = *(int32_t*)  &data[66];
-                lGpsData.numsat  =               data[29];
-                lGpsData.head    = *(int32_t*)  &data[70];
+        /* Check the validity of the data */
+        if ( (data[0] == 0xB5) &&
+             (data[1] == 0x62) &&
+             (data[2] == 0x01) &&
+             (data[3] == 0x07) &&
+             (data[4] == 0x5C) &&
+             (data[5] == 0x00) &&
+             ((data[17] & 0x07) == 0x07) ) {
 
-                /* Set the stop condition */
-                valid++;
-            } else {
-                _delay_ms(100);
-            }
+            /* Extract usefull data */
+            lGpsData.itow    = *(uint32_t*) &data[6];
+            lGpsData.year    = *(uint16_t*) &data[10];
+            lGpsData.month   =               data[12];
+            lGpsData.day     =               data[13];
+            lGpsData.hours   =               data[14];
+            lGpsData.minutes =               data[15];
+            lGpsData.seconds =               data[16];
+            lGpsData.nano    = *(int32_t*)  &data[22];
+            lGpsData.lon     = *(int32_t*)  &data[30];
+            lGpsData.lat     = *(int32_t*)  &data[34];
+            lGpsData.height  = *(int32_t*)  &data[38];
+            lGpsData.speed   = *(int32_t*)  &data[66];
+            lGpsData.numsat  =               data[29];
+            lGpsData.head    = *(int32_t*)  &data[70];
+
+            /* Set the stop condition */
+            valid++;
+        } else {
+            _delay_ms(100);
         }
     }
-
     /* Raw data no longer needed */
     free(data);
 }
@@ -335,11 +330,14 @@ void gpsGetPVT() {
 
 void gpsGetTime() {
     uint16_t byteToRead;
-    uint8_t  data[32]={0};
+    uint8_t  *data;
     uint8_t  valid = 0;
 
     uint8_t  cmd = 0xFD;
     uint8_t  cmd2 = 0xFF;
+
+    /* Free space for the raw input */
+    data = malloc(100 * sizeof(uint8_t));    
 
     while (!valid) {  // 3 minute max to get a full sync
         gpsFlushBuffer();
@@ -379,19 +377,22 @@ void gpsGetTime() {
              ((data[17] & 0x04) == 0x04) ) {  // Check leapsecond flag validity
 
             /* Extract usefull data (ITOW & LeapSecodn)*/
-            //lGpsData.itow    = *(uint32_t*) &data[6];    // FIXME : assignment makes integer from pointer without a cast
+            lGpsData.itow    = *(uint32_t*) &data[6];    // FIXME : assignment makes integer from pointer without a cast
             lGpsData.leapsec = 1000 * (uint32_t)*(int8_t*) &data[16]; // leap seconds in ms
             valid++;
-
         } else {
             _delay_ms(100);
         }
     }
+    /* Raw data no longer needed */
+    free(data);
 }
 
 
-
 void gpsExtractStrings() {
+    /* Clean the structure */
+    memset(&lGpsString, 0, sizeof(lGpsString));
+
     /* Latitude conversion deg -> ddmm.mm */
     uint32_t latInt  = labs(lGpsData.lat / 10000000);
     uint32_t latFrac = labs(lGpsData.lat) - (latInt * 10000000);
