@@ -1,4 +1,4 @@
-# TinyBeacon Project (revC)
+# TinyBeacon Project (revC) -- VHF/UHF radio beacon
 
 *Work in progress*
 
@@ -56,3 +56,5 @@ radio beacon, vhf, uhf, wspr, pi4, qrp, gpsdo
 - add 6 hex header validation -- gps com' part
 - fix timing (email Bo)
 - test Si PLL
+- better PLL lib, freq calculation without reg. adjustment
+- Callsign / loc / freq. in one place
