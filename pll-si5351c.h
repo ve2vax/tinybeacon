@@ -61,14 +61,14 @@
 #define XTAL_FREQ	27000000
 
 
-void pllSetAddr(uint8_t addr);
-void pllInit();
-void pllShutdown();
-void pllSendRegister(uint8_t reg, uint8_t data);
-void pllUpdate(uint8_t bank);
-void pllSetFreq(uint32_t freq, uint8_t bank);
-void pllRfOutput(uint8_t enable);
-void pllPA(uint8_t enable);
+void pll_si5351c_SetAddr(uint8_t addr);
+void pll_si5351c_Init();
+void pll_si5351c_Shutdown();
+void pll_si5351c_SendRegister(uint8_t reg, uint8_t data);
+void pll_si5351c_Update(uint8_t bank);
+void pll_si5351c_SetFreq(uint32_t freq, uint8_t bank);
+void pll_si5351c_RfOutput(uint8_t enable);
+void pll_si5351c_PA(uint8_t enable);
 
-void pllPushA();
-void pllPushB();
+void pll_si5351c_PushA();
+void pll_si5351c_PushB();

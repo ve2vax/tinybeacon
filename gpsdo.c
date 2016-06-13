@@ -66,6 +66,7 @@
 #include "twi.h"
 #include "gps.h"
 #include "pll-adf4355.h"
+#include "pll-si5351c.h"
 #include "usart.h"
 
 #include "morse.h"
@@ -171,6 +172,17 @@ int main (void) {
 
     /*** DEBUG ***/
     //wsprSend();
+    while(1) {
+      pll_si5351c_RfOutput(1);
+
+      pll_si5351c_PushA();
+      _delay_ms(1000); 
+
+      pll_si5351c_PushB();
+      _delay_ms(1000); 
+   
+      pll_si5351c_RfOutput(0);
+    }
 
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
@@ -191,3 +203,5 @@ int main (void) {
     /* This case never happens :) Useless without powermanagement... */
     return 0;
 }
+
+
