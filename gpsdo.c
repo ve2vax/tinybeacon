@@ -58,7 +58,7 @@
    |  70MHz | NA, Region 2     | NA, Region 2   | 0x35C02CF6 (/64)     |
    | 144MHz | 144491000.0      | 144490450.0    | 0x35A02CF6 (/32)     |
    | 222MHz | 222295000.0 +1?  | 222294450.0    | 0x35802CF6 (/16)     |
-   | 440MHz | 432302000.0      | 432301450.0    | 0x35602CF6 ( /8)     |      FIXME : Mod avec flag & multiplier...
+   | 440MHz | 432302000.0      | 432301450.0    | 0x35602CF6 ( /8)     |      FIXME : Mod flag & multiplier...
    |                                                                   | */
 
 #include "cpu.h"

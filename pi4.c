@@ -39,7 +39,7 @@
 #include <avr/pgmspace.h>
 
 
-#define PI4_MESSAGE              "VA2NQ   "   // UPDATE with your Callsign (8 chars, padding with spaces)
+#define PI4_MESSAGE              "X1ABC   "   // UPDATE with your Callsign (8 chars, padding with spaces)
 
 #define PI4_FREQUENCY            144491000.0  // UPDATE with frequency aligned with the frequency bands
 

@@ -34,7 +34,7 @@
 #include <util/delay.h>
 
 
-#define MORSE_MESSAGE              "VA2NQ  FN35  "   // UPDATE with your Callsign + Locator
+#define MORSE_MESSAGE              "X1ABC  AB12CD "   // UPDATE with your Callsign + Locator
 
 #define MORSE_FREQUENCY            144491000.0       // UPDATE with frequency aligned with the frequency bands ( Propagation Beacons Exclusive )
 
@@ -135,7 +135,6 @@ void morse2TonesSendMessage() {
     pllSetFreq(((MORSE_FREQUENCY-250.0) * 1000000), 0);  // PI4 compliant : 250 for 144MHz and below, 400 Hz upper
     pllSetFreq(((MORSE_FREQUENCY)       * 1000000), 1);
     pllUpdate(0);
-    _delay_ms(10);
 
     pllPA(1);
     pllRfOutput(1);
@@ -145,4 +144,6 @@ void morse2TonesSendMessage() {
 
     pllRfOutput(0);
     pllPA(0);
+
+    _delay_ms(500);  // 500ms pause, PI4 procotol description
 }

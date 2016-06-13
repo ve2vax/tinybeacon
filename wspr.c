@@ -40,8 +40,8 @@
 #include <avr/pgmspace.h>
 
 
-#define WSPR_CALLSIGN             "VA2NQ "  // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
-#define WSPR_LOCATOR              "FN35"    // Exactly 4 characters (First part of the locator)
+#define WSPR_CALLSIGN             "X1ABC "  // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
+#define WSPR_LOCATOR              "AB12"    // Exactly 4 characters (First part of the locator)
 #define WSPR_POWER                37        // Numerical value in dBm (range 0-60, check allowed values)
 
 #define WSPR_FREQUENCY            144490450.0
