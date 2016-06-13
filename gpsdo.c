@@ -156,10 +156,10 @@ int main (void) {
     gpsGetTime();
 
     /* ADF4355 PLL Init */
-    pllInit();
+    //pllInit();
 
     /* ADF4355 conf & settings */
-    pllProgramInit();
+    //pllProgramInit();
 
     /* Prepare the message to encode for PI4 message */
     pi4Encode();
@@ -172,6 +172,11 @@ int main (void) {
 
     /*** DEBUG ***/
     //wsprSend();
+    //DDRD  &= ~_BV(DDD2);    // FIX PB soudure...
+    DDRB   |= _BV(DDB2);    // PLL LE - Enable output
+    PORTB  |= _BV(PORTB2);  // Enable PLL
+    pll_si5351c_SetAddr(0x60);
+    pll_si5351c_Init();
     while(1) {
       pll_si5351c_RfOutput(1);
 
