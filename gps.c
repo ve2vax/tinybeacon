@@ -264,7 +264,7 @@ void gpsGetPVT() {
     /* Free space for the raw input */
     data = malloc(100 * sizeof(uint8_t));
 
-    while (!valid) { 
+    while (!valid) {
         gpsFlushBuffer();
 
         gpsPoll_NAV_PVT();
@@ -294,12 +294,12 @@ void gpsGetPVT() {
 
         /* Check the validity of the data */
         if ( (data[0] == 0xB5) &&
-             (data[1] == 0x62) &&
-             (data[2] == 0x01) &&
-             (data[3] == 0x07) &&
-             (data[4] == 0x5C) &&
-             (data[5] == 0x00) &&
-             ((data[17] & 0x07) == 0x07) ) {
+                (data[1] == 0x62) &&
+                (data[2] == 0x01) &&
+                (data[3] == 0x07) &&
+                (data[4] == 0x5C) &&
+                (data[5] == 0x00) &&
+                ((data[17] & 0x07) == 0x07) ) {
 
             /* Extract usefull data */
             lGpsData.itow    = *(uint32_t*) &data[6];
@@ -337,7 +337,7 @@ void gpsGetTime() {
     uint8_t  cmd2 = 0xFF;
 
     /* Free space for the raw input */
-    data = malloc(100 * sizeof(uint8_t));    
+    data = malloc(100 * sizeof(uint8_t));
 
     while (!valid) {  // 3 minute max to get a full sync
         gpsFlushBuffer();
@@ -357,7 +357,7 @@ void gpsGetTime() {
         /* Free the buffer if unexpected size */
         if (byteToRead != 24)
             continue;
-        
+
         /* Point on the stream buffer (Register Adressing) */
         twi_writeTo(gpsAddr, &cmd2, 1, 1, 0);  // 0xFF = StreamBuffer
         _delay_ms(1);
@@ -369,12 +369,12 @@ void gpsGetTime() {
 
         /* Check the validity of the data */
         if ( (data[0] == 0xB5) &&
-             (data[1] == 0x62) &&
-             (data[2] == 0x01) &&
-             (data[3] == 0x20) &&
-             (data[4] == 0x10) &&
-             (data[5] == 0x00) &&
-             ((data[17] & 0x04) == 0x04) ) {  // Check leapsecond flag validity
+                (data[1] == 0x62) &&
+                (data[2] == 0x01) &&
+                (data[3] == 0x20) &&
+                (data[4] == 0x10) &&
+                (data[5] == 0x00) &&
+                ((data[17] & 0x04) == 0x04) ) {  // Check leapsecond flag validity
 
             /* Extract usefull data (ITOW & LeapSecodn)*/
             lGpsData.itow    = *(uint32_t*) &data[6];    // FIXME : assignment makes integer from pointer without a cast
