@@ -4,7 +4,7 @@ CFLAGS= -Wall -Os -std=c99 -ffunction-sections -fdata-sections -MMD -mmcu=atmega
 LDFLAGS = -Wall -Os -Wl,--gc-sections,--relax -mmcu=atmega328p
 LIBS = -lm
 
-OBJ = twi.o gps.o pll.o usart.o morse.o pi4.o wspr.o gpsdo.o
+OBJ = twi.o gps.o pll-adf4355.o usart.o morse.o pi4.o wspr.o gpsdo.o
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@  

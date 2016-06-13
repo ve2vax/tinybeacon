@@ -27,7 +27,7 @@
 
 
 #include "cpu.h"
-#include "pll.h"
+#include "pll-adf4355.h"
 
 #include <avr/io.h>
 #include <util/delay.h>

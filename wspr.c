@@ -32,7 +32,7 @@
 #include "cpu.h"
 #include "wspr.h"
 
-#include "pll.h"
+#include "pll-adf4355.h"
 
 #include <avr/io.h>
 #include <string.h>

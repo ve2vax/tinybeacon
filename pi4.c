@@ -32,7 +32,7 @@
 #include "cpu.h"
 #include "pi4.h"
 
-#include "pll.h"
+#include "pll-adf4355.h"
 
 #include <string.h>
 #include <util/delay.h>

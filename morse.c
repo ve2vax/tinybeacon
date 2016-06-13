@@ -29,7 +29,7 @@
 #include "cpu.h"
 #include "morse.h"
 
-#include "pll.h"
+#include "pll-adf4355.h"
 
 #include <util/delay.h>
 

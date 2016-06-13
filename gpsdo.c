@@ -65,7 +65,7 @@
 
 #include "twi.h"
 #include "gps.h"
-#include "pll.h"
+#include "pll-adf4355.h"
 #include "usart.h"
 
 #include "morse.h"
