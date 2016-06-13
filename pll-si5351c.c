@@ -1,17 +1,17 @@
-/* 
+/*
  * FreeBSD License
- * Copyright (c) 2016, Guenael 
- * All rights reserved. 
- * 
+ * Copyright (c) 2016, Guenael
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  */
 
 
@@ -39,38 +39,38 @@
 
 #define NUM_REGS_MAX 8
 
-typedef struct Reg_Data{
-   unsigned char Reg_Addr;
-   unsigned char Reg_Val;
+typedef struct Reg_Data {
+    unsigned char Reg_Addr;
+    unsigned char Reg_Val;
 } Reg_Data;
 
 Reg_Data const Reg_Store1[NUM_REGS_MAX] = {
-{ 26,0x89},
-{ 27,0x68},
-{ 28,0x00},
-{ 29,0x29},
-{ 30,0x59},
-{ 31,0x95},
-{ 32,0xBB},
-{ 33,0x58},
+    { 26,0x89},
+    { 27,0x68},
+    { 28,0x00},
+    { 29,0x29},
+    { 30,0x59},
+    { 31,0x95},
+    { 32,0xBB},
+    { 33,0x58},
 };
 
 Reg_Data const Reg_Store2[NUM_REGS_MAX] = {
-{ 26,0x89},
-{ 27,0x68},
-{ 28,0x00},
-{ 29,0x29},
-{ 30,0x59},
-{ 31,0x95},
-{ 32,0xBB},
-{ 33,0xD8},
+    { 26,0x89},
+    { 27,0x68},
+    { 28,0x00},
+    { 29,0x29},
+    { 30,0x59},
+    { 31,0x95},
+    { 32,0xBB},
+    { 33,0xD8},
 };
 
 
 /* Global definition for the I2C GPS address */
-static uint8_t pllAddr;    
+static uint8_t pllAddr;
 
-static uint8_t pllBankSettings[4][8]; 
+static uint8_t pllBankSettings[4][8];
 
 
 void pllSetAddr(uint8_t addr) {
@@ -116,7 +116,7 @@ void pllInit() {
 
     pllSendRegister(SI_CLK0_CONTROL, 0x4F);   // FIXME -- config option todo
     pllSendRegister(SI_CLK1_CONTROL, 0x84);   // Turn off
-    pllSendRegister(SI_CLK2_CONTROL, 0x84);   // Turn off 
+    pllSendRegister(SI_CLK2_CONTROL, 0x84);   // Turn off
     pllSendRegister(SI_CLK3_CONTROL, 0x84);   // Turn off
     pllSendRegister(SI_CLK4_CONTROL, 0x84);   // Turn off
     pllSendRegister(SI_CLK5_CONTROL, 0x84);   // Turn off
@@ -127,8 +127,8 @@ void pllInit() {
     // pllSendRegister(SI_VCXO_PARAM, 0x??);  // TODO VCXO balloon
 
     // Diviser -- toujours 1
-    pllSendRegister(SI_SYNTH_MS_0 + 1, 0x01); 
-    pllSendRegister(SI_SYNTH_MS_0 + 3, 0x01); 
+    pllSendRegister(SI_SYNTH_MS_0 + 1, 0x01);
+    pllSendRegister(SI_SYNTH_MS_0 + 3, 0x01);
 }
 
 
@@ -167,19 +167,19 @@ void pllUpdate(uint8_t bank) {
 void pllSetFreq(uint32_t freq, uint8_t bank) { // ATTENTION : uint64_t vs uint32_t
     uint32_t xtalFreq = XTAL_FREQ;
 
-    uint32_t divider = 900000000 / freq;// Calculate the division ratio. 900,000,000 is the maximum internal 
-                                    // PLL frequency: 900MHz
-    if (divider % 2) divider--;     // Ensure an even integer division ratio
+    uint32_t divider = 900000000 / freq;// Calculate the division ratio. 900,000,000 is the maximum internal
+    // PLL frequency: 900MHz
+    if (divider % 2) divider--;         // Ensure an even integer division ratio
 
     uint32_t pllFreq = divider * freq;  // Calculate the pllFrequency: the divider * desired output frequency
 
-    uint8_t mult = pllFreq / xtalFreq;      // Determine the multiplier to get to the required pllFrequency
-    uint32_t l = pllFreq % xtalFreq;         // It has three parts:
-    float f = l;                          // mult is an integer that must be in the range 15..90
-    f *= 1048575;                   // num and denom are the fractional parts, the numerator and denominator
-    f /= xtalFreq;                  // each is 20 bits (range 0..1048575)
-    uint32_t num = f;                        // the actual multiplier is  mult + num / denom
-    uint32_t denom = 1048575;                // For simplicity we set the denominator to the maximum 1048575
+    uint8_t mult = pllFreq / xtalFreq;  // Determine the multiplier to get to the required pllFrequency
+    uint32_t l = pllFreq % xtalFreq;    // It has three parts:
+    float f = l;                        // mult is an integer that must be in the range 15..90
+    f *= 1048575;                       // num and denom are the fractional parts, the numerator and denominator
+    f /= xtalFreq;                      // each is 20 bits (range 0..1048575)
+    uint32_t num = f;                   // the actual multiplier is  mult + num / denom
+    uint32_t denom = 1048575;           // For simplicity we set the denominator to the maximum 1048575
 
 
     uint32_t P1,P2,P3;
@@ -205,8 +205,7 @@ void pllRfOutput(uint8_t enable) {
     if (enable) {
         pllSendRegister(SI_CLK_ENABLE, 0xFE);
         //PORTB |= _BV(PORTB2);
-    }
-    else {
+    } else {
         pllSendRegister(SI_CLK_ENABLE, 0xFF);
         //PORTB &= ~_BV(PORTB2);
     }
