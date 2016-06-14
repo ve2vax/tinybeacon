@@ -37,7 +37,7 @@
 #include <util/delay.h>
 
 
-#define NUM_REGS_MAX 8
+#define NUM_REGS_MAX 32
 
 typedef struct Reg_Data {
     unsigned char Reg_Addr;
@@ -46,25 +46,73 @@ typedef struct Reg_Data {
 
 
 Reg_Data const Reg_Store1[NUM_REGS_MAX] = {
-    { 26,0x89},
-    { 27,0x68},
-    { 28,0x00},
-    { 29,0x29},
-    { 30,0x59},
-    { 31,0x95},
-    { 32,0xBB},
-    { 33,0x58},
+{ 15,0x04},
+{ 16,0x4F},
+{ 17,0x84},
+{ 18,0x84},
+{ 19,0x84},
+{ 20,0x84},
+{ 21,0x84},
+{ 22,0x84},
+{ 23,0x84},
+{ 24,0x00},
+{ 25,0x00},
+{ 26,0x01},
+{ 27,0xF4},
+{ 28,0x00},
+{ 29,0x29},
+{ 30,0x58},
+{ 31,0x00},
+{ 32,0x01},
+{ 33,0xA0},
+{ 34,0x00},
+{ 35,0x00},
+{ 36,0x00},
+{ 37,0x00},
+{ 38,0x00},
+{ 39,0x00},
+{ 40,0x00},
+{ 41,0x00},
+{ 42,0x00},
+{ 43,0x01},
+{ 44,0x00},
+{ 45,0x01},
+{ 46,0x00},
 };
 
 Reg_Data const Reg_Store2[NUM_REGS_MAX] = {
-    { 26,0x89},
-    { 27,0x68},
-    { 28,0x00},
-    { 29,0x29},
-    { 30,0x59},
-    { 31,0x95},
-    { 32,0xBB},
-    { 33,0xD8},
+{ 15,0x04},
+{ 16,0x4F},
+{ 17,0x84},
+{ 18,0x84},
+{ 19,0x84},
+{ 20,0x84},
+{ 21,0x84},
+{ 22,0x84},
+{ 23,0x84},
+{ 24,0x00},
+{ 25,0x00},
+{ 26,0xA1},
+{ 27,0x20},
+{ 28,0x00},
+{ 29,0x29},
+{ 30,0x58},
+{ 31,0x76},
+{ 32,0x5A},
+{ 33,0x80},
+{ 34,0x00},
+{ 35,0x00},
+{ 36,0x00},
+{ 37,0x00},
+{ 38,0x00},
+{ 39,0x00},
+{ 40,0x00},
+{ 41,0x00},
+{ 42,0x00},
+{ 43,0x01},
+{ 44,0x00},
+{ 45,0x01},
+{ 46,0x00},
 };
 
 
@@ -111,7 +159,7 @@ void pll_si5351c_Init() {
         //twi_writeTo(pllAddr, &Reg_Store[i], 2, 1, 0);
     */
 
-    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);     // Disable all output
+    //pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);     // Disable all output
 
     pll_si5351c_SendRegister(SI_PLL_INPUT_SRC, 0x04);  // FIXME -- Debug avec XTAL first
 
@@ -124,7 +172,7 @@ void pll_si5351c_Init() {
     pll_si5351c_SendRegister(SI_CLK6_CONTROL, 0x84);   // Turn off
     pll_si5351c_SendRegister(SI_CLK7_CONTROL, 0x84);   // Turn off
 
-    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFE);     // Disable all output exept CLK0 (CLK0_OEB)
+    //pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFE);     // Disable all output exept CLK0 (CLK0_OEB)
     // pllSendRegister(SI_VCXO_PARAM, 0x??);  // TODO VCXO balloon
 
     // Diviser -- toujours 1

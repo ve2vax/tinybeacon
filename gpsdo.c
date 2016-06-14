@@ -178,7 +178,7 @@ int main (void) {
     pll_si5351c_SetAddr(0x60);
     pll_si5351c_Init();
     while(1) {
-      pll_si5351c_RfOutput(1);
+      //pll_si5351c_RfOutput(1);
 
       pll_si5351c_PushA();
       _delay_ms(1000); 
@@ -186,7 +186,7 @@ int main (void) {
       pll_si5351c_PushB();
       _delay_ms(1000); 
    
-      pll_si5351c_RfOutput(0);
+      //pll_si5351c_RfOutput(0);
     }
 
     /* Loop sequence :
