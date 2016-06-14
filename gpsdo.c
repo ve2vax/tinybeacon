@@ -173,17 +173,22 @@ int main (void) {
     /*** DEBUG ***/
     //wsprSend();
     //DDRD  &= ~_BV(DDD2);    // FIX PB soudure...
-    DDRB   |= _BV(DDB2);    // PLL LE - Enable output
-    PORTB  |= _BV(PORTB2);  // Enable PLL
+
     pll_si5351c_SetAddr(0x60);
     pll_si5351c_Init();
+    pll_si5351c_SetFreq(144490000,0);
+    pll_si5351c_SetFreq(144490050,1);
     while(1) {
       //pll_si5351c_RfOutput(1);
 
-      pll_si5351c_PushA();
+      //pll_si5351c_PushA();
+      pll_si5351c_Update1(0);
+      //pll_si5351c_Update(0);
       _delay_ms(1000); 
 
-      pll_si5351c_PushB();
+      //pll_si5351c_PushB();
+      pll_si5351c_Update2(0);
+      //pll_si5351c_Update(1);
       _delay_ms(1000); 
    
       //pll_si5351c_RfOutput(0);

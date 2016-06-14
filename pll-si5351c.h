@@ -32,14 +32,7 @@
 
 #define SI_CLK_ENABLE    3
 #define SI_PLL_INPUT_SRC 15
-#define SI_CLK0_CONTROL  16
-#define SI_CLK1_CONTROL  17
-#define SI_CLK2_CONTROL  18
-#define SI_CLK3_CONTROL  19
-#define SI_CLK4_CONTROL  20
-#define SI_CLK5_CONTROL  21
-#define SI_CLK6_CONTROL  22
-#define SI_CLK7_CONTROL  23
+#define SI_CLK_CONTROL   16
 #define SI_SYNTH_PLL_A	 26 // Multisynth NA
 #define SI_SYNTH_PLL_B	 34 // Multisynth NB
 #define SI_SYNTH_MS_0	 42
@@ -66,6 +59,8 @@ void pll_si5351c_Init();
 void pll_si5351c_Shutdown();
 void pll_si5351c_SendRegister(uint8_t reg, uint8_t data);
 void pll_si5351c_Update(uint8_t bank);
+void pll_si5351c_Update1(uint8_t bank);
+void pll_si5351c_Update2(uint8_t bank);
 void pll_si5351c_SetFreq(uint32_t freq, uint8_t bank);
 void pll_si5351c_RfOutput(uint8_t enable);
 void pll_si5351c_PA(uint8_t enable);
