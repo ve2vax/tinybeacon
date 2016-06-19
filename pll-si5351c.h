@@ -52,6 +52,7 @@
 #define SI_CLK_SRC_PLL_B	0b00100000
 
 #define XTAL_FREQ	27000000
+#define TCXO_FREQ	10000000
 
 
 void pll_si5351c_SetAddr(uint8_t addr);
@@ -59,8 +60,6 @@ void pll_si5351c_Init();
 void pll_si5351c_Shutdown();
 void pll_si5351c_SendRegister(uint8_t reg, uint8_t data);
 void pll_si5351c_Update(uint8_t bank);
-void pll_si5351c_Update1(uint8_t bank);
-void pll_si5351c_Update2(uint8_t bank);
 void pll_si5351c_SetFreq(uint32_t freq, uint8_t bank);
 void pll_si5351c_RfOutput(uint8_t enable);
 void pll_si5351c_PA(uint8_t enable);

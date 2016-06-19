@@ -49,15 +49,14 @@ void pll_si5351c_SetAddr(uint8_t addr) {
 
 
 void pll_si5351c_Init() {
-    DDRB   |= _BV(DDB2);    // PLL LE - Enable output
+    DDRB   |= _BV(DDB2);     // PLL LE - Enable output
     PORTB  &= ~_BV(PORTB2);  // Enable PLL
     _delay_ms(100);
 
-    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);       // Disable all output
+    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
+    pll_si5351c_SendRegister(SI_PLL_INPUT_SRC, 0x00);   // FIXME -- Debug avec XTAL first
 
-    pll_si5351c_SendRegister(SI_PLL_INPUT_SRC, 0x04);    // FIXME -- Debug avec XTAL first
-
-    pll_si5351c_SendRegister(SI_CLK_CONTROL+0, 0x4F);   // FIXME -- config option todo
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+0, 0x4F);   // Turn on CLK0
     pll_si5351c_SendRegister(SI_CLK_CONTROL+1, 0x84);   // Turn off
     pll_si5351c_SendRegister(SI_CLK_CONTROL+2, 0x84);   // Turn off
     pll_si5351c_SendRegister(SI_CLK_CONTROL+3, 0x84);   // Turn off
@@ -75,7 +74,8 @@ void pll_si5351c_Init() {
     pll_si5351c_SendRegister(SI_SYNTH_MS_0+6, 0x00);
     pll_si5351c_SendRegister(SI_SYNTH_MS_0+7, 0x00);
 
-    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFE);     // Disable all output exept CLK0 (CLK0_OEB)
+    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFE);      // Disable all output exept CLK0 (CLK0_OEB)
+    pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);
 }
 
 
@@ -89,12 +89,11 @@ void pll_si5351c_SendRegister(uint8_t reg, uint8_t data) {
     tmp[1] = data;
 
     twi_writeTo(pll_si5351c_Addr, tmp, sizeof(tmp), 1, 0);
+    _delay_ms(1);
 }
 
 
 void pll_si5351c_Update(uint8_t bank) {
-    pll_si5351c_SendRegister(SI_CLK_CONTROL, 0x84); // Turn off // glitch
-
     pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 0, pll_si5351c_BankSettings[bank][0]);
     pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 1, pll_si5351c_BankSettings[bank][1]);
     pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 2, pll_si5351c_BankSettings[bank][2]);
@@ -103,49 +102,9 @@ void pll_si5351c_Update(uint8_t bank) {
     pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 5, pll_si5351c_BankSettings[bank][5]);
     pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 6, pll_si5351c_BankSettings[bank][6]);
     pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
+    //pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
 
-    pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);    // Reset both PLL // glitch ??
-    pll_si5351c_SendRegister(SI_CLK_CONTROL, 0x4F); // Turn on // glitch ??
-
-    _delay_us(468);  // Align ...
-}
-
-
-void pll_si5351c_Update1(uint8_t bank) {
-    pll_si5351c_SendRegister(SI_CLK_CONTROL, 0x84); // Turn off // glitch
-
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 0, 0xA1);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 1, 0x20);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 2, 0x00);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 3, 0x29);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 4, 0x58);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 5, 0x76);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 6, 0x5A);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 7, 0x80);
-
-    pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);    // Reset both PLL // glitch ??
-    pll_si5351c_SendRegister(SI_CLK_CONTROL, 0x4F); // Turn on // glitch ??
-
-    _delay_us(468);  // Align ...
-}
-
-
-void pll_si5351c_Update2(uint8_t bank) {
-    pll_si5351c_SendRegister(SI_CLK_CONTROL, 0x84); // Turn off // glitch
-
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 0, 0x01);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 1, 0xF4);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 2, 0x00);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 3, 0x29);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 4, 0x58);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 5, 0x00);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 6, 0x01);
-    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 7, 0xA0);
-
-    pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);    // Reset both PLL // glitch ??
-    pll_si5351c_SendRegister(SI_CLK_CONTROL, 0x4F); // Turn on // glitch ??
-
-    _delay_us(468);  // Align ...
+    _delay_us(468);  // TODO Align ...
 }
 
 
@@ -188,11 +147,9 @@ void pll_si5351c_SetFreq(uint32_t freq, uint8_t bank) { // ATTENTION : uint64_t 
 
 void pll_si5351c_RfOutput(uint8_t enable) {
     if (enable) {
-        pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFE);
-        //PORTB |= _BV(PORTB2);
+        PORTB |= _BV(PORTB2);
     } else {
-        pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);
-        //PORTB &= ~_BV(PORTB2);
+        PORTB &= ~_BV(PORTB2);
     }
 }
 
@@ -204,76 +161,3 @@ void pll_si5351c_PA(uint8_t enable) {
     else
         PORTD &= ~_BV(PORTD6);
 }
-
-
-/*
-#define NUM_REGS_MAX 17
-
-typedef struct Reg_Data {
-    unsigned char Reg_Addr;
-    unsigned char Reg_Val;
-} Reg_Data;
-
-
-Reg_Data const Reg_Store1[NUM_REGS_MAX] = {
-{ 15,0x04},
-
-{ 26,0x01},
-{ 27,0xF4},
-{ 28,0x00},
-{ 29,0x29},
-{ 30,0x58},
-{ 31,0x00},
-{ 32,0x01},
-{ 33,0xA0},
-
-{ 42,0x00},
-{ 43,0x01},
-{ 44,0x00},
-{ 45,0x01},
-{ 46,0x00},
-{ 47,0x00},
-{ 48,0x00},
-{ 49,0x00},
-};
-
-Reg_Data const Reg_Store2[NUM_REGS_MAX] = {
-{ 15,0x04},
-
-{ 26,0xA1},
-{ 27,0x20},
-{ 28,0x00},
-{ 29,0x29},
-{ 30,0x58},
-{ 31,0x76},
-{ 32,0x5A},
-{ 33,0x80},
-
-{ 42,0x00},
-{ 43,0x01},
-{ 44,0x00},
-{ 45,0x01},
-{ 46,0x00},
-{ 47,0x00},
-{ 48,0x00},
-{ 49,0x00},
-};
-
-void pll_si5351c_PushA() {
-    for (uint8_t i=0; i<NUM_REGS_MAX; i++) { // Skip the header for the checksum
-        pll_si5351c_SendRegister(Reg_Store1[i].Reg_Addr, Reg_Store1[i].Reg_Val);
-        //twi_writeTo(pllAddr, &Reg_Store[i], 2, 1, 0);
-        _delay_ms(1);
-    }
-}
-
-
-void pll_si5351c_PushB() {
-    for (uint8_t i=0; i<NUM_REGS_MAX; i++) { // Skip the header for the checksum
-        pll_si5351c_SendRegister(Reg_Store2[i].Reg_Addr, Reg_Store2[i].Reg_Val);
-        //twi_writeTo(pllAddr, &Reg_Store[i], 2, 1, 0);
-        _delay_ms(1);
-    }
-}
-
-*/
