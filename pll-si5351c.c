@@ -27,7 +27,7 @@
 
 
 #include "cpu.h"
-#include "pll.h"
+#include "pll-si5351c.h"
 
 #include "twi.h"
 #include "usart.h"
@@ -37,134 +37,78 @@
 #include <util/delay.h>
 
 
-#define NUM_REGS_MAX 8
-
-typedef struct Reg_Data {
-    unsigned char Reg_Addr;
-    unsigned char Reg_Val;
-} Reg_Data;
-
-Reg_Data const Reg_Store1[NUM_REGS_MAX] = {
-    { 26,0x89},
-    { 27,0x68},
-    { 28,0x00},
-    { 29,0x29},
-    { 30,0x59},
-    { 31,0x95},
-    { 32,0xBB},
-    { 33,0x58},
-};
-
-Reg_Data const Reg_Store2[NUM_REGS_MAX] = {
-    { 26,0x89},
-    { 27,0x68},
-    { 28,0x00},
-    { 29,0x29},
-    { 30,0x59},
-    { 31,0x95},
-    { 32,0xBB},
-    { 33,0xD8},
-};
-
-
 /* Global definition for the I2C GPS address */
-static uint8_t pllAddr;
+static uint8_t pll_si5351c_Addr;
 
-static uint8_t pllBankSettings[4][8];
+static uint8_t pll_si5351c_BankSettings[4][8];
 
 
-void pllSetAddr(uint8_t addr) {
-    pllAddr = addr;
+void pll_si5351c_SetAddr(uint8_t addr) {
+    pll_si5351c_Addr = addr;
 }
 
 
-void pllPushA() {
-    for (uint8_t i=0; i<NUM_REGS_MAX; i++) { // Skip the header for the checksum
-        pllSendRegister(Reg_Store1[i].Reg_Addr, Reg_Store1[i].Reg_Val);
-        //twi_writeTo(pllAddr, &Reg_Store[i], 2, 1, 0);
-    }
-}
-
-
-void pllPushB() {
-    for (uint8_t i=0; i<NUM_REGS_MAX; i++) { // Skip the header for the checksum
-        pllSendRegister(Reg_Store2[i].Reg_Addr, Reg_Store2[i].Reg_Val);
-        //twi_writeTo(pllAddr, &Reg_Store[i], 2, 1, 0);
-    }
-}
-
-
-void pllInit() {
-    DDRB   |= _BV(DDB2);    // PLL LE - Enable output
+void pll_si5351c_Init() {
+    DDRB   |= _BV(DDB2);     // PLL LE - Enable output
     PORTB  &= ~_BV(PORTB2);  // Enable PLL
+    _delay_ms(100);
 
-    /* PA output status port -- NOT USED */
-    DDRD |= _BV(DDD6);
+    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
+    pll_si5351c_SendRegister(SI_PLL_INPUT_SRC, 0x00);   // FIXME -- Debug avec XTAL first
 
-    /* PA output disable at start */
-    PORTD &= ~_BV(PORTD6);
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+0, 0x4F);   // Turn on CLK0
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+1, 0x84);   // Turn off
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+2, 0x84);   // Turn off
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+3, 0x84);   // Turn off
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+4, 0x84);   // Turn off
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+5, 0x84);   // Turn off
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+6, 0x84);   // Turn off
+    pll_si5351c_SendRegister(SI_CLK_CONTROL+7, 0x84);   // Turn off
+    
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+0, 0x00);
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+1, 0x01);
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+2, 0x00);
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+3, 0x01);
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+4, 0x00);
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+5, 0x00);
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+6, 0x00);
+    pll_si5351c_SendRegister(SI_SYNTH_MS_0+7, 0x00);
 
-    /*
-    for (uint8_t i=0; i<NUM_REGS_MAX; i++) { // Skip the header for the checksum
-        pllSendRegister(Reg_Store1[i].Reg_Addr, Reg_Store[i].Reg_Val);
-        //twi_writeTo(pllAddr, &Reg_Store[i], 2, 1, 0);
-    */
-
-    pllSendRegister(SI_CLK_ENABLE, 0xFF);     // Disable all output
-
-    pllSendRegister(SI_PLL_INPUT_SRC, 0x04);  // FIXME -- Debug avec XTAL first
-
-    pllSendRegister(SI_CLK0_CONTROL, 0x4F);   // FIXME -- config option todo
-    pllSendRegister(SI_CLK1_CONTROL, 0x84);   // Turn off
-    pllSendRegister(SI_CLK2_CONTROL, 0x84);   // Turn off
-    pllSendRegister(SI_CLK3_CONTROL, 0x84);   // Turn off
-    pllSendRegister(SI_CLK4_CONTROL, 0x84);   // Turn off
-    pllSendRegister(SI_CLK5_CONTROL, 0x84);   // Turn off
-    pllSendRegister(SI_CLK6_CONTROL, 0x84);   // Turn off
-    pllSendRegister(SI_CLK7_CONTROL, 0x84);   // Turn off
-
-    pllSendRegister(SI_CLK_ENABLE, 0xFE);     // Disable all output exept CLK0 (CLK0_OEB)
-    // pllSendRegister(SI_VCXO_PARAM, 0x??);  // TODO VCXO balloon
-
-    // Diviser -- toujours 1
-    pllSendRegister(SI_SYNTH_MS_0 + 1, 0x01);
-    pllSendRegister(SI_SYNTH_MS_0 + 3, 0x01);
+    pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFE);      // Disable all output exept CLK0 (CLK0_OEB)
+    pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);
 }
 
 
-void pllShutdown() {
+void pll_si5351c_Shutdown() {
 }
 
 
-void pllSendRegister(uint8_t reg, uint8_t data) {
+void pll_si5351c_SendRegister(uint8_t reg, uint8_t data) {
     uint8_t tmp[2] = {0};
     tmp[0] = reg;
     tmp[1] = data;
 
-    twi_writeTo(pllAddr, tmp, sizeof(tmp), 1, 0);
+    twi_writeTo(pll_si5351c_Addr, tmp, sizeof(tmp), 1, 0);
+    _delay_ms(1);
 }
 
 
-void pllUpdate(uint8_t bank) {
-    pllSendRegister(SI_CLK0_CONTROL, 0x84); // Turn off // glitch
+void pll_si5351c_Update(uint8_t bank) {
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 0, pll_si5351c_BankSettings[bank][0]);
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 1, pll_si5351c_BankSettings[bank][1]);
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 2, pll_si5351c_BankSettings[bank][2]);
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 3, pll_si5351c_BankSettings[bank][3]);
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 4, pll_si5351c_BankSettings[bank][4]);
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 5, pll_si5351c_BankSettings[bank][5]);
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 6, pll_si5351c_BankSettings[bank][6]);
+    pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
+    //pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
 
-    pllSendRegister(SI_SYNTH_PLL_A + 0, pllBankSettings[bank][0]);
-    pllSendRegister(SI_SYNTH_PLL_A + 1, pllBankSettings[bank][1]);
-    pllSendRegister(SI_SYNTH_PLL_A + 2, pllBankSettings[bank][2]);
-    pllSendRegister(SI_SYNTH_PLL_A + 3, pllBankSettings[bank][3]);
-    pllSendRegister(SI_SYNTH_PLL_A + 4, pllBankSettings[bank][4]);
-    pllSendRegister(SI_SYNTH_PLL_A + 5, pllBankSettings[bank][5]);
-    pllSendRegister(SI_SYNTH_PLL_A + 6, pllBankSettings[bank][6]);
-    pllSendRegister(SI_SYNTH_PLL_A + 7, pllBankSettings[bank][7]);
-
-    pllSendRegister(SI_PLL_RESET, 0xA0);    // Reset both PLL // glitch ??
-    pllSendRegister(SI_CLK0_CONTROL, 0x4F); // Turn on // glitch ??
-
-    _delay_us(468);  // Align ...
+    _delay_us(468);  // TODO Align ...
 }
 
 
-void pllSetFreq(uint32_t freq, uint8_t bank) { // ATTENTION : uint64_t vs uint32_t
+void pll_si5351c_SetFreq(uint32_t freq, uint8_t bank) { // ATTENTION : uint64_t vs uint32_t
     uint32_t xtalFreq = XTAL_FREQ;
 
     uint32_t divider = 900000000 / freq;// Calculate the division ratio. 900,000,000 is the maximum internal
@@ -190,30 +134,28 @@ void pllSetFreq(uint32_t freq, uint8_t bank) { // ATTENTION : uint64_t vs uint32
     P3 = denom;
 
     /* Packing */
-    pllBankSettings[bank][0] = (P3 & 0x0000FF00) >> 8;
-    pllBankSettings[bank][1] = (P3 & 0x000000FF);
-    pllBankSettings[bank][2] = (P1 & 0x00030000) >> 16;
-    pllBankSettings[bank][3] = (P1 & 0x0000FF00) >> 8;
-    pllBankSettings[bank][4] = (P1 & 0x000000FF);
-    pllBankSettings[bank][5] = ((P3 & 0x000F0000) >> 12) | ((P2 & 0x000F0000) >> 16);
-    pllBankSettings[bank][6] = (P2 & 0x0000FF00) >> 8;
-    pllBankSettings[bank][7] = (P2 & 0x000000FF);
+    pll_si5351c_BankSettings[bank][0] = (P3 & 0x0000FF00) >> 8;
+    pll_si5351c_BankSettings[bank][1] = (P3 & 0x000000FF);
+    pll_si5351c_BankSettings[bank][2] = (P1 & 0x00030000) >> 16;
+    pll_si5351c_BankSettings[bank][3] = (P1 & 0x0000FF00) >> 8;
+    pll_si5351c_BankSettings[bank][4] = (P1 & 0x000000FF);
+    pll_si5351c_BankSettings[bank][5] = ((P3 & 0x000F0000) >> 12) | ((P2 & 0x000F0000) >> 16);
+    pll_si5351c_BankSettings[bank][6] = (P2 & 0x0000FF00) >> 8;
+    pll_si5351c_BankSettings[bank][7] = (P2 & 0x000000FF);
 }
 
 
-void pllRfOutput(uint8_t enable) {
+void pll_si5351c_RfOutput(uint8_t enable) {
     if (enable) {
-        pllSendRegister(SI_CLK_ENABLE, 0xFE);
-        //PORTB |= _BV(PORTB2);
+        PORTB |= _BV(PORTB2);
     } else {
-        pllSendRegister(SI_CLK_ENABLE, 0xFF);
-        //PORTB &= ~_BV(PORTB2);
+        PORTB &= ~_BV(PORTB2);
     }
 }
 
 
 // Not USED !!!
-void pllPA(uint8_t enable) {
+void pll_si5351c_PA(uint8_t enable) {
     if (enable)
         PORTD |= _BV(PORTD6);
     else
