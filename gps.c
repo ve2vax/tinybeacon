@@ -155,18 +155,18 @@ static const uint8_t PROGMEM NAV_TIMEGPS[] = {
 
 void gpsInit() {
     /* GPS EXTINT : set pin 9 of PORT-PD5 for output*/
-    DDRD |= _BV(DDD5);
+    //DDRD |= _BV(DDD5);
 
     /* GPS EXTINT for now (energy saver feature) */
-    PORTD &= ~_BV(PORTD5);
+    //PORTD &= ~_BV(PORTD5);
 
     /* Note : I2C bus Init is done by i2c.c */
 
     // Rev.B GPS Reset PIN ======= Do NOT use on Rev.C
     /* GPS Reset port : set pin 9 of PORT-PD5 for output*/
-    //DDRD |= _BV(DDD5);
+    DDRD |= _BV(DDD5);
     /* GPS not disable  */
-    //PORTD |= _BV(PORTD5);
+    PORTD |= _BV(PORTD5);
 
     // FIXME -- add here ? check
     /* Setup & restrict the DDC port only */

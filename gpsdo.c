@@ -65,8 +65,7 @@
 
 #include "twi.h"
 #include "gps.h"
-#include "pll-adf4355.h"
-#include "pll-si5351c.h"
+#include "pll.h"
 #include "usart.h"
 
 #include "morse.h"
@@ -155,11 +154,8 @@ int main (void) {
     gpsExtractStrings();
     gpsGetTime();
 
-    /* ADF4355 PLL Init */
-    //pllInit();
-
-    /* ADF4355 conf & settings */
-    //pllProgramInit();
+    /* ADF4355 PLL Init, conf & settings */
+    pllInit();
 
     /* Prepare the message to encode for PI4 message */
     pi4Encode();
@@ -172,21 +168,6 @@ int main (void) {
 
     /*** DEBUG ***/
     //wsprSend();
-    //DDRD  &= ~_BV(DDD2);    // FIX PB soudure...
-
-    pll_si5351c_SetAddr(0x60);
-    pll_si5351c_Init();
-    pll_si5351c_SetFreq(144490000,0);
-    pll_si5351c_SetFreq(144490007,1);
-    while(1) {
-      pll_si5351c_Update(0);
-      //pll_si5351c_RfOutput(1);
-      _delay_ms(1000); 
-
-      pll_si5351c_Update(1);
-      //pll_si5351c_RfOutput(0);
-      _delay_ms(1000); 
-    }
 
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
@@ -209,3 +190,18 @@ int main (void) {
 }
 
 
+/*  === Si5351 DEBUG
+    pll_si5351c_SetAddr(0x60);
+    pll_si5351c_Init();
+    pll_si5351c_SetFreq(144490000,0);
+    pll_si5351c_SetFreq(144490007,1);
+    while(1) {
+      pll_si5351c_Update(0);
+      //pll_si5351c_RfOutput(1);
+      _delay_ms(1000); 
+
+      pll_si5351c_Update(1);
+      //pll_si5351c_RfOutput(0);
+      _delay_ms(1000); 
+    }
+*/

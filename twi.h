@@ -25,7 +25,7 @@
 
 
 #ifndef TWI_FREQ
-#define TWI_FREQ 10000L // FIXME !!!!!!!!!!!!!!!!!!!!!!!!! timing ADI = 100000
+#define TWI_FREQ 100000L
 #endif
 
 #ifndef TWI_BUFFER_LENGTH

@@ -27,16 +27,13 @@
 
 
 #include "cpu.h"
+#include "config.h"
 #include "morse.h"
 
-#include "pll-adf4355.h"
+#include "pll.h"
 
 #include <util/delay.h>
 
-
-#define MORSE_MESSAGE              "X1ABC  AB12CD "   // UPDATE with your Callsign + Locator
-
-#define MORSE_FREQUENCY            144491000.0       // UPDATE with frequency aligned with the frequency bands ( Propagation Beacons Exclusive )
 
 #define MORSE_DOT_DURATION         100               // 60 ms = 20 WPM, 100ms = 12 WPM
 #define MORSE_FM_FREQ              700

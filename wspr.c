@@ -30,21 +30,16 @@
 
 
 #include "cpu.h"
+#include "config.h"
 #include "wspr.h"
 
-#include "pll-adf4355.h"
+#include "pll.h"
 
 #include <avr/io.h>
 #include <string.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 
-
-#define WSPR_CALLSIGN             "X1ABC "  // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
-#define WSPR_LOCATOR              "AB12"    // Exactly 4 characters (First part of the locator)
-#define WSPR_POWER                37        // Numerical value in dBm (range 0-60, check allowed values)
-
-#define WSPR_FREQUENCY            144490450.0
 
 #define WSPR_SYMBOLS_LENGTH       162       // The number of symbols in the WSPR transmission
 #define WSPR_SYMBOLS              162       // The number of symbols in the WSPR transmission
