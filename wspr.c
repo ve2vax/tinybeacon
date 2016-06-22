@@ -143,7 +143,7 @@ void wsprEncode() {
 
 
 void wsprSetFreqs(float carrierFreq) {
-    uint64_t baseFreq = carrierFreq * 1000000.0;
+    uint64_t baseFreq = (uint64_t)carrierFreq * 1000000;
 
     pllSetFreq(baseFreq, 0);
     pllSetFreq(baseFreq + 1465000, 1);

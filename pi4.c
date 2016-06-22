@@ -132,11 +132,13 @@ void PI4MakeMessage(char *msg) {
 
 
 void pi4SetFreqs(float carrierFreq) {
-    pllSetFreq(carrierFreq * 1000000 - 117187500, 0);
-    pllSetFreq(carrierFreq * 1000000 + 117187500, 1);
-    pllSetFreq(carrierFreq * 1000000 + 351562500, 2);
-    pllSetFreq(carrierFreq * 1000000 + 585937500, 3);
-    pllSetFreq(carrierFreq * 1000000, 4);
+    uint64_t baseFreq = (uint64_t)carrierFreq * 1000000;
+
+    pllSetFreq(baseFreq - 117187500, 0);
+    pllSetFreq(baseFreq + 117187500, 1);
+    pllSetFreq(baseFreq + 351562500, 2);
+    pllSetFreq(baseFreq + 585937500, 3);
+    pllSetFreq(baseFreq, 4);
     pllUpdate(4);
 }
 
