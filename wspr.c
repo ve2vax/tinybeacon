@@ -29,7 +29,6 @@
 /* Code for callsign packing from : https://github.com/DanAnkers/WsprryPi/blob/master/wspr.c */
 
 
-#include "cpu.h"
 #include "config.h"
 #include "wspr.h"
 

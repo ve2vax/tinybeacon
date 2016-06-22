@@ -26,15 +26,16 @@
  */
 
 
-#include "cpu.h"
+#include "config.h"
 #include "pll.h"
 
 #include "twi.h"
-#include "usart.h"
 
 #include <avr/io.h>
 #include <util/delay.h>
-#include <math.h>   // FIXME: Floor bypass with simple cast?
+
+
+#define ADI
 
 
 /* === ADF4355 CODE === */
@@ -43,7 +44,7 @@
     #define COUNTER_RESET         4  //  5th bit, Register 4
     #define AUTOCAL              21  // 22th bit, Register 0
     #define RF_OUTPUT_ENABLE      6  //  7th bit, Register 6
-
+    #define PLL_UPDATE_DELAY      2
 
     /* Precalculated settings for the PLL */
     static uint32_t pllGeneralSettings[13] = {
@@ -53,7 +54,7 @@
         0x40000003,  // Register 3
         0x3000C184,  // Register 4
         0x00800025,  // Register 5
-        0x35C02CF6,  // Register 6  // FIXME : use flags !
+        0x35002CF6,  // Register 6
         0x12000007,  // Register 7
         0x102D0428,  // Register 8
         0x14053CF9,  // Register 9
@@ -100,7 +101,7 @@
     }
 
 
-    void pllInit() {
+    void pllInit(uint8_t addr) {
         DDRB   |= _BV(DDB3);    // MOSI   - Enable output
         DDRB   |= _BV(DDB5);    // SCK    - Enable output
 
@@ -115,6 +116,9 @@
 
         /* Enable SPI, as Master, prescaler = Fosc/16 */
         SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0);
+
+        /* General settigs based on Morse freq */
+        pllSetFreq((MORSE_FREQUENCY * 1000000), 0);
 
         /* First initialisation of the PLL, with the default 0 */
         _delay_ms(100);
@@ -180,7 +184,39 @@
         /* Calculate the frequency register -- Application 144MHz (Usable only beetween : 106.25 - 212.5 MHz) */
         /* NOTE : AVR do NOT support double, and precision of float are insuffisant, so I use uint64... */
 
-        uint64_t pllVcoFreq  = freq * 128;
+        /* Output divider */
+        uint8_t pllDivider = 1;
+
+        /* Convert & use freq in MHz */
+        uint64_t freqMHz = freq / 1000000000000;
+
+        if ( freqMHz <  (6800/128) ) {        //  freq < 53.125
+            pllGeneralSettings[6] |= 0x00C00000;
+            pllDivider = 128; // Implicit prescaler /2
+        } else if ( freqMHz <  (6800/64) ) {  //  freq < 106.25
+            pllGeneralSettings[6] |= 0x00C00000;
+            pllDivider = 64;
+        } else if ( freqMHz <  (6800/32) ) {  //  freq < 212.5
+            pllGeneralSettings[6] |= 0x00A00000;
+            pllDivider = 32;
+        } else if ( freqMHz <  (6800/16) ) {  //  freq < 425
+            pllGeneralSettings[6] |= 0x00800000;
+            pllDivider = 16;
+        } else if ( freqMHz <  (6800/8) ) {  //  freq < 850
+            pllGeneralSettings[6] |= 0x00600000;
+            pllDivider = 8;
+        } else if ( freqMHz <  (6800/4) ) {  //  freq < 1700
+            pllGeneralSettings[6] |= 0x00400000;
+            pllDivider = 4;
+        } else if ( freqMHz <  (6800/2) ) {  //  freq < 3400
+            pllGeneralSettings[6] |= 0x00200000;
+            pllDivider = 2;
+        } else { //if ( freqMHz <  (6800/1) ) {  //  freq < 6800
+            pllGeneralSettings[6] |= 0x00000000; // Useless, but consistency...
+            pllDivider = 1;
+        }
+
+        uint64_t pllVcoFreq  = freq * pllDivider;
         uint64_t pllN        = pllVcoFreq / 10000000;
 
         uint64_t pllNint1    = pllN / 1000000;
@@ -215,15 +251,35 @@
 /* === Si5351 CODE === */
 #else
 
+    #define SI_CLK_ENABLE    3
+    #define SI_PLL_INPUT_SRC 15
+    #define SI_CLK_CONTROL   16
+    #define SI_SYNTH_PLL_A   26 // Multisynth NA
+    #define SI_SYNTH_PLL_B   34 // Multisynth NB
+    #define SI_SYNTH_MS_0    42
+    #define SI_VCXO_PARAM    162 // TODO
+    #define SI_PLL_RESET     177
+
+    #define SI_R_DIV_1      0b00000000
+    #define SI_R_DIV_2      0b00010000
+    #define SI_R_DIV_4      0b00100000
+    #define SI_R_DIV_8      0b00110000
+    #define SI_R_DIV_16     0b01000000
+    #define SI_R_DIV_32     0b01010000
+    #define SI_R_DIV_64     0b01100000
+    #define SI_R_DIV_128    0b01110000
+
+    #define SI_CLK_SRC_PLL_A    0b00000000
+    #define SI_CLK_SRC_PLL_B    0b00100000
+
+    #define XTAL_FREQ   27000000
+    #define TCXO_FREQ   10000000
+
+
     /* Global definition for the I2C GPS address */
     static uint8_t pll_si5351c_Addr;
 
     static uint8_t pll_si5351c_BankSettings[4][8];
-
-
-    void pllSetAddr(uint8_t addr) {
-        pll_si5351c_Addr = addr;
-    }
 
 
     void pllSendRegister(uint8_t reg, uint8_t data) {
@@ -236,10 +292,13 @@
     }
 
 
-    void pllInit() {
+    void pllInit(uint8_t addr) {
         DDRB   |= _BV(DDB2);     // PLL LE - Enable output
         PORTB  &= ~_BV(PORTB2);  // Enable PLL
         _delay_ms(100);
+
+        /* Define I2C address for the PLL */
+        pll_si5351c_Addr = addr;
 
         pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
         pll_si5351c_SendRegister(SI_PLL_INPUT_SRC, 0x00);   // FIXME -- Debug avec XTAL first

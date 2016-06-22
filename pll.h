@@ -28,58 +28,14 @@
 
 #pragma once
 
-#include "cpu.h"
 
-#define ADI
-
-#ifdef ADI
-
-	#define PLL_UPDATE_DELAY		2
-
-	void pllInit();
-	void pllShutdown();
-	void pllUpdate(uint8_t bank);
-	void pllUpdateTiny(uint8_t bank);
-	void pllSetFreq(uint64_t freq, uint8_t bank);
-	void pllRfOutput(uint8_t enable);
-	void pllPA(uint8_t enable);
-
-#else
-
-	#define SI_CLK_ENABLE    3
-	#define SI_PLL_INPUT_SRC 15
-	#define SI_CLK_CONTROL   16
-	#define SI_SYNTH_PLL_A	 26 // Multisynth NA
-	#define SI_SYNTH_PLL_B	 34 // Multisynth NB
-	#define SI_SYNTH_MS_0	 42
-	#define SI_VCXO_PARAM	 162 // TODO
-	#define SI_PLL_RESET	 177
-
-	#define SI_R_DIV_1		0b00000000
-	#define SI_R_DIV_2		0b00010000
-	#define SI_R_DIV_4		0b00100000
-	#define SI_R_DIV_8		0b00110000
-	#define SI_R_DIV_16		0b01000000
-	#define SI_R_DIV_32		0b01010000
-	#define SI_R_DIV_64		0b01100000
-	#define SI_R_DIV_128	0b01110000
-
-	#define SI_CLK_SRC_PLL_A	0b00000000
-	#define SI_CLK_SRC_PLL_B	0b00100000
-
-	#define XTAL_FREQ	27000000
-	#define TCXO_FREQ	10000000
-
-	void pllSetAddr(uint8_t addr);
-	void pllInit();
-	void pllShutdown();
-	void pllUpdate(uint8_t bank);
-	void pllUpdateTiny(uint8_t bank);
-	void pllSetFreq(uint32_t freq, uint8_t bank);
-	void pllRfOutput(uint8_t enable);
-	void pllPA(uint8_t enable);
-
-#endif
+#include "config.h"
 
 
-
+void pllInit(uint8_t addr);
+void pllShutdown();
+void pllUpdate(uint8_t bank);
+void pllUpdateTiny(uint8_t bank);
+void pllSetFreq(uint64_t freq, uint8_t bank);
+void pllRfOutput(uint8_t enable);
+void pllPA(uint8_t enable);

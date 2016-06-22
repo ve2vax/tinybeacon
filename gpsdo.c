@@ -48,20 +48,9 @@
    |  - PD7      (pin 11) | INFO LED                                   |
    |  - PB0      (pin 12) | PLL LOCK                                   |
    |  - PB2      (pin 14) | PLL EN                                     |
-   |                                                                   |
-   |                                                                   |
-   |  Example : VA2NQ Beacon -- Frequency band plan                    |
-   |                                                                   |
-   |   BAND | CW/PI4 Frequency | WSPR Frequency | PLL Reg. 6           |
-   |--------|------------------|----------------|----------------------|
-   |  50MHz | 50295000.0       | 50294450.0     | 0x35C02CF6 (/128!)   |
-   |  70MHz | NA, Region 2     | NA, Region 2   | 0x35C02CF6 (/64)     |
-   | 144MHz | 144491000.0      | 144490450.0    | 0x35A02CF6 (/32)     |
-   | 222MHz | 222295000.0 +1?  | 222294450.0    | 0x35802CF6 (/16)     |
-   | 440MHz | 432302000.0      | 432301450.0    | 0x35602CF6 ( /8)     |      FIXME : Mod flag & multiplier...
    |                                                                   | */
 
-#include "cpu.h"
+#include "config.h"
 
 #include "twi.h"
 #include "gps.h"
@@ -134,11 +123,8 @@ int main (void) {
     twi_init();
     _delay_ms(10);
 
-    /* uBlox/I2C : Set the default I2C address of the GPS */
-    gpsSetAddr(0x42);
-
-    /* uBlox : GPS IO init. */
-    gpsInit();  // I2C Have to be init before the PLL !
+    /* uBlox : GPS IO init & Set the default I2C address of the GPS */
+    gpsInit(0x42);  // I2C Have to be init before the PLL !
 
     /* uBlox : Rstrict DDC port only */
     gpsSet_CFG_PRT();
@@ -155,7 +141,7 @@ int main (void) {
     gpsGetTime();
 
     /* ADF4355 PLL Init, conf & settings */
-    pllInit();
+    pllInit(0);
 
     /* Prepare the message to encode for PI4 message */
     pi4Encode();

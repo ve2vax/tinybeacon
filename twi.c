@@ -28,7 +28,7 @@
 #include <avr/pgmspace.h>
 
 #include "twi.h"
-#include "cpu.h"
+#include "config.h"
 
 #ifndef false
 #define false 0

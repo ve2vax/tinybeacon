@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "cpu.h"
+#include "config.h"
 
 
 uint32_t Parity(uint64_t Value);

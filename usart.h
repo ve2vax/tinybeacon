@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "cpu.h"
+#include "config.h"
 
 
 void usartInit();                   /* Initialize the USART @ 9600 bauds (8N1), RX&TX */

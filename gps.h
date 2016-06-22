@@ -29,12 +29,11 @@
 #pragma once
 
 
-#include "cpu.h"
+#include "config.h"
 
 
-void gpsInit();
+void gpsInit(uint8_t addr);
 void gpsShutdown();
-void gpsSetAddr(uint8_t addr);
 void gpsSet_CFG_TP5();
 void gpsSet_CFG_RATE();
 void gpsSet_CFG_PRT();

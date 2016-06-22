@@ -26,7 +26,7 @@
  */
 
 
-#include "cpu.h"
+#include "config.h"
 #include "usart.h"
 
 #include <avr/io.h>

@@ -29,7 +29,6 @@
 /* Protocol description & source : http://www.rudius.net/oz2m/ngnb/pi4.htm */
 
 
-#include "cpu.h"
 #include "config.h"
 #include "pi4.h"
 

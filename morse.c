@@ -26,7 +26,6 @@
  */
 
 
-#include "cpu.h"
 #include "config.h"
 #include "morse.h"
 

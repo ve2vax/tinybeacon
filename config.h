@@ -28,6 +28,13 @@
 
 #pragma once
 
+/* CPU frequency -- DO NOT CHANGE */
+#define F_CPU 10000000UL
+
+/* Standard definition used almost everywhere */
+#include <stdint.h>
+
+/* Beacon config -- Callsign / Locator / Frequencies */
 #define PI4_MESSAGE      "X1ABC   "        // UPDATE with your Callsign (8 chars, padding with spaces)
 #define PI4_FREQUENCY    50295000.0        // UPDATE with frequency aligned with the frequency bands
 
@@ -39,3 +46,14 @@
 #define WSPR_POWER       37                // Numerical value in dBm (range 0-60, check allowed values)
 #define WSPR_FREQUENCY   50294450.0
 
+/* |                                                 |
+   |  Example : VA2NQ Beacon -- Frequency band plan  |
+   |                                                 |
+   |   BAND | CW/PI4 Frequency | WSPR Frequency      |
+   |--------|------------------|---------------------|
+   |  50MHz | 50295000.0       | 50294450.0          |
+   |  70MHz | NA, Region 2     | NA, Region 2        |
+   | 144MHz | 144491000.0      | 144490450.0         |
+   | 222MHz | 222295000.0 +1?  | 222294450.0         |
+   | 440MHz | 432302000.0      | 432301450.0         |
+   |                                                 | */
