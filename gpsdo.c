@@ -123,23 +123,6 @@ int main (void) {
     twi_init();
     _delay_ms(10);
 
-    /* uBlox : GPS IO init & Set the default I2C address of the GPS */
-    gpsInit(0x42);  // I2C Have to be init before the PLL !
-
-    /* uBlox : Wait on a full GPS sync (+ info req. for message encoding)*/
-    gpsGetPVT();
-    gpsExtractStrings();
-    gpsGetTime();
-
-    /* uBlox : Rstrict DDC port only */
-    gpsSet_CFG_PRT();
-
-    /* uBlox : 10MHz timing setup */
-    gpsSet_CFG_TP5();
-
-    /* uBlox : Refresh rate for internal GPSDO alignment */
-    gpsSet_CFG_RATE();
-
     /* ADF4355 PLL Init, conf & settings */
     pllInit(0);
 
@@ -148,6 +131,23 @@ int main (void) {
 
     /* Prepare the message to encode for WSPR message */
     wsprEncode();
+
+    /* uBlox : GPS IO init & Set the default I2C address of the GPS */
+    gpsInit(0x42);  // I2C Have to be init before the PLL !
+
+    /* uBlox : Rstrict DDC port only */
+    gpsSet_CFG_PRT();
+
+    /* uBlox : Wait on a full GPS sync (+ info req. for message encoding)*/
+    gpsGetPVT();
+    gpsExtractStrings();
+    gpsGetTime();
+
+    /* uBlox : 10MHz timing setup */
+    gpsSet_CFG_TP5();
+
+    /* uBlox : Refresh rate for internal GPSDO alignment */
+    gpsSet_CFG_RATE();
 
     /* End of init sequence : Turn on the LED (pin 11) */
     PORTD |= _BV(PORTD7);

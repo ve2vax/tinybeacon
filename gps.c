@@ -155,8 +155,10 @@ void gpsInit(uint8_t addr) {
     /* GPS EXTINT : set pin 9 of PORT-PD5 for output*/
     DDRD |= _BV(DDD5);
 
-    /* GPS EXTINT for now (energy saver feature) */
+    /* GPS EXTINT down for now (energy saver feature) */
     PORTD &= ~_BV(PORTD5);
+
+    _delay_ms(100);
 
     /* Define I2C address */
     gpsAddr = addr;
