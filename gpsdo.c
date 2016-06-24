@@ -108,10 +108,6 @@ int main (void) {
     CLKPR = 0;            // Set prescaler to 0 = Restore system clock to 10 MHz
     sei();
 
-    /* DEBUG Enable I2C output */
-    DDRC   |= _BV(DDC4);  // Enable output
-    DDRC   |= _BV(DDC5);  // Enable output
-
     /* LED : Set pin 11 of PORT-PD7 for output*/
     DDRD |= _BV(DDD7);
 

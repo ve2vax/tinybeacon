@@ -16,7 +16,7 @@ gpsdo: $(OBJ)
 	avr-size -C --mcu=atmega328p gpsdo.elf
 
 burn:
-	avrdude -c usbtiny -p ATMEGA328P -v -U flash:w:gpsdo.hex -U lfuse:w:0x60:m -U hfuse:w:0xd8:m -U efuse:w:0xfd:m
+	avrdude -c usbtiny -p ATMEGA328P -v -U flash:w:gpsdo.hex -U lfuse:w:0xe0:m -U hfuse:w:0xd8:m -U efuse:w:0xff:m
 
 clean:
 	rm -f *.o *.d *.elf *.hex
