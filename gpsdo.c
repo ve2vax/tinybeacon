@@ -126,6 +126,11 @@ int main (void) {
     /* uBlox : GPS IO init & Set the default I2C address of the GPS */
     gpsInit(0x42);  // I2C Have to be init before the PLL !
 
+    /* uBlox : Wait on a full GPS sync (+ info req. for message encoding)*/
+    gpsGetPVT();
+    gpsExtractStrings();
+    gpsGetTime();
+
     /* uBlox : Rstrict DDC port only */
     gpsSet_CFG_PRT();
 
@@ -134,11 +139,6 @@ int main (void) {
 
     /* uBlox : Refresh rate for internal GPSDO alignment */
     gpsSet_CFG_RATE();
-
-    /* uBlox : Wait on a full GPS sync (+ info req. for message encoding)*/
-    gpsGetPVT();
-    gpsExtractStrings();
-    gpsGetTime();
 
     /* ADF4355 PLL Init, conf & settings */
     pllInit(0);
