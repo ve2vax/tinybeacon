@@ -120,7 +120,7 @@ int main (void) {
     _delay_ms(10);
 
     /* ADF4355 PLL Init, conf & settings */
-    pllInit(0);
+    pllInit(0x60);  // 0x60 used only for Si5351 (I2C addr.)
 
     /* Prepare the message to encode for PI4 message */
     pi4Encode();
@@ -151,6 +151,21 @@ int main (void) {
     /*** DEBUG ***/
     //wsprSend();
 
+    /* === Si5351 DEBUG */
+    pllInit(0x60);
+    pllSetFreq(144490000000000,0);
+    pllSetFreq(144490007000000,1);
+    while(1) {
+      pllUpdate(0);
+      //pll_si5351c_RfOutput(1);
+      _delay_ms(1000); 
+
+      pllUpdate(1);
+      //pll_si5351c_RfOutput(0);
+      _delay_ms(1000); 
+    }
+
+
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
        - PI4 + Morse + Tone (1 minute)
@@ -170,20 +185,3 @@ int main (void) {
     /* This case never happens :) Useless without powermanagement... */
     return 0;
 }
-
-
-/*  === Si5351 DEBUG
-    pll_si5351c_SetAddr(0x60);
-    pll_si5351c_Init();
-    pll_si5351c_SetFreq(144490000,0);
-    pll_si5351c_SetFreq(144490007,1);
-    while(1) {
-      pll_si5351c_Update(0);
-      //pll_si5351c_RfOutput(1);
-      _delay_ms(1000); 
-
-      pll_si5351c_Update(1);
-      //pll_si5351c_RfOutput(0);
-      _delay_ms(1000); 
-    }
-*/

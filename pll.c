@@ -35,7 +35,7 @@
 #include <util/delay.h>
 
 
-#define ADI
+//#define ADI
 
 
 /* === ADF4355 CODE === */
@@ -300,29 +300,29 @@
         /* Define I2C address for the PLL */
         pll_si5351c_Addr = addr;
 
-        pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
-        pll_si5351c_SendRegister(SI_PLL_INPUT_SRC, 0x00);   // FIXME -- Debug avec XTAL first
+        pllSendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
+        pllSendRegister(SI_PLL_INPUT_SRC, 0x06);   // Use external clock
 
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+0, 0x4F);   // Turn on CLK0
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+1, 0x84);   // Turn off
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+2, 0x84);   // Turn off
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+3, 0x84);   // Turn off
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+4, 0x84);   // Turn off
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+5, 0x84);   // Turn off
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+6, 0x84);   // Turn off
-        pll_si5351c_SendRegister(SI_CLK_CONTROL+7, 0x84);   // Turn off
+        pllSendRegister(SI_CLK_CONTROL+0, 0x4F);   // Turn on CLK0
+        pllSendRegister(SI_CLK_CONTROL+1, 0x84);   // Turn off
+        pllSendRegister(SI_CLK_CONTROL+2, 0x84);   // Turn off
+        pllSendRegister(SI_CLK_CONTROL+3, 0x84);   // Turn off
+        pllSendRegister(SI_CLK_CONTROL+4, 0x84);   // Turn off
+        pllSendRegister(SI_CLK_CONTROL+5, 0x84);   // Turn off
+        pllSendRegister(SI_CLK_CONTROL+6, 0x84);   // Turn off
+        pllSendRegister(SI_CLK_CONTROL+7, 0x84);   // Turn off
         
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+0, 0x00);
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+1, 0x01);
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+2, 0x00);
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+3, 0x01);
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+4, 0x00);
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+5, 0x00);
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+6, 0x00);
-        pll_si5351c_SendRegister(SI_SYNTH_MS_0+7, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+0, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+1, 0x01);
+        pllSendRegister(SI_SYNTH_MS_0+2, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+3, 0x01);
+        pllSendRegister(SI_SYNTH_MS_0+4, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+5, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+6, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+7, 0x00);
 
-        pll_si5351c_SendRegister(SI_CLK_ENABLE, 0xFE);      // Disable all output exept CLK0 (CLK0_OEB)
-        pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);
+        pllSendRegister(SI_CLK_ENABLE, 0xFE);      // Disable all output exept CLK0 (CLK0_OEB)
+        pllSendRegister(SI_PLL_RESET, 0xA0);
     }
 
 
@@ -331,27 +331,29 @@
 
 
     void pllUpdate(uint8_t bank) {
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 0, pll_si5351c_BankSettings[bank][0]);
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 1, pll_si5351c_BankSettings[bank][1]);
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 2, pll_si5351c_BankSettings[bank][2]);
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 3, pll_si5351c_BankSettings[bank][3]);
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 4, pll_si5351c_BankSettings[bank][4]);
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 5, pll_si5351c_BankSettings[bank][5]);
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 6, pll_si5351c_BankSettings[bank][6]);
-        pll_si5351c_SendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
-        //pll_si5351c_SendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
+        pllSendRegister(SI_SYNTH_PLL_A + 0, pll_si5351c_BankSettings[bank][0]);
+        pllSendRegister(SI_SYNTH_PLL_A + 1, pll_si5351c_BankSettings[bank][1]);
+        pllSendRegister(SI_SYNTH_PLL_A + 2, pll_si5351c_BankSettings[bank][2]);
+        pllSendRegister(SI_SYNTH_PLL_A + 3, pll_si5351c_BankSettings[bank][3]);
+        pllSendRegister(SI_SYNTH_PLL_A + 4, pll_si5351c_BankSettings[bank][4]);
+        pllSendRegister(SI_SYNTH_PLL_A + 5, pll_si5351c_BankSettings[bank][5]);
+        pllSendRegister(SI_SYNTH_PLL_A + 6, pll_si5351c_BankSettings[bank][6]);
+        pllSendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
+        //pllSendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
 
         _delay_us(468);  // TODO Align ...
     }
 
 
-    void pllUpdate(uint8_t bank) {
+    void pllUpdateTiny(uint8_t bank) {
         pllUpdate(bank);
     }
 
-
-    void pllSetFreq(uint32_t freq, uint8_t bank) { // ATTENTION : uint64_t vs uint32_t
-        uint32_t xtalFreq = XTAL_FREQ;
+    void pllSetFreq(uint64_t freq, uint8_t bank) { // ATTENTION : uint64_t vs uint32_t
+        // FIXME !!!
+        freq /= 1000000;
+        
+        uint32_t xtalFreq = TCXO_FREQ;
 
         uint32_t divider = 900000000 / freq;// Calculate the division ratio. 900,000,000 is the maximum internal
         // PLL frequency: 900MHz
