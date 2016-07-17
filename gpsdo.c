@@ -172,14 +172,14 @@ int main (void) {
     return 0;
 }
 
-    /* === Si5351 DEBUG 
+    /* === Si5351 DEBUG
     //pllSetFreq(144430000000000,0);
     //pllSetFreq(144435000000000,1);
-    pllSetFreq(144490882812500,0); 
+    pllSetFreq(144490882812500,0);
     pllSetFreq(144491117187500,1);
     //pllSetFreq(144491351562500,2);
     //pllSetFreq(144491585937500,3);
-    //pllSetFreq(144480000000000,4);    
+    //pllSetFreq(144480000000000,4);
     pllUpdate(0);
     pllRfOutput(1);
     pllPA(1);
@@ -187,9 +187,9 @@ int main (void) {
     while(1) {
       pllUpdate(0);
       //pllRfOutput(0);
-      _delay_ms(1000); 
+      _delay_ms(1000);
 
       pllUpdate(1);
       //pllRfOutput(1);
-      _delay_ms(1000); 
+      _delay_ms(1000);
     } */

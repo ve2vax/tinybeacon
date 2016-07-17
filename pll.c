@@ -254,26 +254,14 @@
     #define SI_CLK_ENABLE    3
     #define SI_PLL_INPUT_SRC 15
     #define SI_CLK_CONTROL   16
-    #define SI_SYNTH_PLL_A   26 // Multisynth NA
-    #define SI_SYNTH_PLL_B   34 // Multisynth NB
+    #define SI_SYNTH_PLL_A   26  // Multisynth NA
+    #define SI_SYNTH_PLL_B   34  // Multisynth NB
     #define SI_SYNTH_MS_0    42
-    #define SI_VCXO_PARAM    162 // TODO
+    #define SI_VCXO_PARAM    162
     #define SI_PLL_RESET     177
 
-    #define SI_R_DIV_1      0b00000000
-    #define SI_R_DIV_2      0b00010000
-    #define SI_R_DIV_4      0b00100000
-    #define SI_R_DIV_8      0b00110000
-    #define SI_R_DIV_16     0b01000000
-    #define SI_R_DIV_32     0b01010000
-    #define SI_R_DIV_64     0b01100000
-    #define SI_R_DIV_128    0b01110000
-
-    #define SI_CLK_SRC_PLL_A    0b00000000
-    #define SI_CLK_SRC_PLL_B    0b00100000
-
-    #define XTAL_FREQ   27000000
-    #define TCXO_FREQ   10000000
+    #define XTAL_FREQ        27000000000000
+    #define TCXO_FREQ        10000000000000
 
 
     /* Global definition for the I2C GPS address */
@@ -308,9 +296,9 @@
         pll_si5351c_Addr = addr;
 
         pllSendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
-        pllSendRegister(SI_PLL_INPUT_SRC, 0x04);   // Use external clock on PLL-A // FIXME=2
+        pllSendRegister(SI_PLL_INPUT_SRC, 0x04);   // Use external clock on PLL-A
 
-        pllSendRegister(SI_CLK_CONTROL+0, 0x0F);   // Turn on CLK0 with PLL-A & 8mA // FIXME=0F
+        pllSendRegister(SI_CLK_CONTROL+0, 0x0F);   // Turn on CLK0 with PLL-A & 8mA
         pllSendRegister(SI_CLK_CONTROL+1, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+2, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+3, 0x84);   // Turn off
@@ -318,12 +306,12 @@
         pllSendRegister(SI_CLK_CONTROL+5, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+6, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+7, 0x84);   // Turn off
-        
-        pllSendRegister(SI_SYNTH_MS_0+0, 0x00);    // (denominator [15:8])
-        pllSendRegister(SI_SYNTH_MS_0+1, 0x01);    // (denominator [7:0])
-        pllSendRegister(SI_SYNTH_MS_0+2, 0x00);    //
-        pllSendRegister(SI_SYNTH_MS_0+3, 0x01);    // integer part divider [15:8] // ??
-        pllSendRegister(SI_SYNTH_MS_0+4, 0x00);    // integer part divider  [7:0]
+
+        pllSendRegister(SI_SYNTH_MS_0+0, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+1, 0x01);
+        pllSendRegister(SI_SYNTH_MS_0+2, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+3, 0x01);
+        pllSendRegister(SI_SYNTH_MS_0+4, 0x00);
         pllSendRegister(SI_SYNTH_MS_0+5, 0x00);
         pllSendRegister(SI_SYNTH_MS_0+6, 0x00);
         pllSendRegister(SI_SYNTH_MS_0+7, 0x00);
@@ -356,26 +344,16 @@
         pllUpdate(bank);
     }
 
-    void pllSetFreq(uint64_t freq, uint8_t bank) { // ATTENTION : uint64_t vs uint32_t
-        // FIXME !!!
-        freq /= 1000000;
-        
-        uint32_t xtalFreq = TCXO_FREQ;
+    void pllSetFreq(uint64_t freq, uint8_t bank) {
+        uint64_t divider = 900000000000000 / freq; 
+        if (divider % 2) divider--;
 
-        uint32_t divider = 900000000 / freq;// Calculate the division ratio. 900,000,000 is the maximum internal
-        // PLL frequency: 900MHz
-        if (divider % 2) divider--;         // Ensure an even integer division ratio
+        uint64_t pllFreq = divider * freq;
 
-        uint32_t pllFreq = divider * freq;  // Calculate the pllFrequency: the divider * desired output frequency
-
-        uint8_t mult = pllFreq / xtalFreq;  // Determine the multiplier to get to the required pllFrequency
-        uint32_t l = pllFreq % xtalFreq;    // It has three parts:
-        float f = l;                        // mult is an integer that must be in the range 15..90
-        f *= 1048575;                       // num and denom are the fractional parts, the numerator and denominator
-        f /= xtalFreq;                      // each is 20 bits (range 0..1048575)
-        uint32_t num = f;                   // the actual multiplier is  mult + num / denom
-        uint32_t denom = 1048575;           // For simplicity we set the denominator to the maximum 1048575
-
+        uint32_t mult = pllFreq / TCXO_FREQ;
+        uint32_t num  = ((pllFreq % TCXO_FREQ) * 1048575ULL) / TCXO_FREQ;
+        uint32_t denom = 1048575;
+        // FIXME best denom ajust for WSPR
 
         uint32_t P1,P2,P3;
         P1 = (uint32_t)(128 * ((float)num / (float)denom));
