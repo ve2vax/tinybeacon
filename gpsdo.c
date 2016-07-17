@@ -149,22 +149,8 @@ int main (void) {
     PORTD |= _BV(PORTD7);
 
     /*** DEBUG ***/
+    //pi4Send();
     //wsprSend();
-
-    /* === Si5351 DEBUG */
-    pllInit(0x60);
-    pllSetFreq(144490000000000,0);
-    pllSetFreq(144490007000000,1);
-    while(1) {
-      pllUpdate(0);
-      //pll_si5351c_RfOutput(1);
-      _delay_ms(1000); 
-
-      pllUpdate(1);
-      //pll_si5351c_RfOutput(0);
-      _delay_ms(1000); 
-    }
-
 
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
@@ -185,3 +171,25 @@ int main (void) {
     /* This case never happens :) Useless without powermanagement... */
     return 0;
 }
+
+    /* === Si5351 DEBUG 
+    //pllSetFreq(144430000000000,0);
+    //pllSetFreq(144435000000000,1);
+    pllSetFreq(144490882812500,0); 
+    pllSetFreq(144491117187500,1);
+    //pllSetFreq(144491351562500,2);
+    //pllSetFreq(144491585937500,3);
+    //pllSetFreq(144480000000000,4);    
+    pllUpdate(0);
+    pllRfOutput(1);
+    pllPA(1);
+
+    while(1) {
+      pllUpdate(0);
+      //pllRfOutput(0);
+      _delay_ms(1000); 
+
+      pllUpdate(1);
+      //pllRfOutput(1);
+      _delay_ms(1000); 
+    } */

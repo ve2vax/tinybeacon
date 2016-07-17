@@ -102,17 +102,17 @@
 
 
     void pllInit(uint8_t addr) {
-        DDRB   |= _BV(DDB3);    // MOSI   - Enable output
-        DDRB   |= _BV(DDB5);    // SCK    - Enable output
+        DDRB   |= _BV(DDB3);       /* MOSI   - Enable output */
+        DDRB   |= _BV(DDB5);       /* SCK    - Enable output */
 
-        DDRB   |= _BV(DDB2);    // PLL LE - Enable output
-        PORTB  |= _BV(PORTB2);  // Disable PLL LE
+        //DDRB   &= ~_BV(DDB0);      /* PLL_INTR - Set input */
+        //PORTB  |= ~_BV(PORTB0);    /* Activate pull-ups in PORTB pin 12 */
 
-        /* PA output status port */
-        DDRD |= _BV(DDD6);
+        DDRB   |=  _BV(DDB2);      /* PLL_LE - Enable output */
+        PORTB  |= _BV(PORTB2);     /* PLL_LE disable */
 
-        /* PA output disable at start */
-        PORTD &= ~_BV(PORTD6);
+        DDRD   |=  _BV(DDD6);      /* PA_EN - Set output */
+        PORTD  &= ~_BV(PORTD6);    /* PA_EN disable at start */
 
         /* Enable SPI, as Master, prescaler = Fosc/16 */
         SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR0);
@@ -279,7 +279,7 @@
     /* Global definition for the I2C GPS address */
     static uint8_t pll_si5351c_Addr;
 
-    static uint8_t pll_si5351c_BankSettings[4][8];
+    static uint8_t pll_si5351c_BankSettings[6][8];
 
 
     void pllSendRegister(uint8_t reg, uint8_t data) {
@@ -293,17 +293,24 @@
 
 
     void pllInit(uint8_t addr) {
-        DDRB   |= _BV(DDB2);     // PLL LE - Enable output
-        PORTB  &= ~_BV(PORTB2);  // Enable PLL
+        DDRD   |=  _BV(DDD6);      /* PA_EN - Set output */
+        PORTD  &= ~_BV(PORTD6);    /* PA_EN disable at start */
+
+        DDRB   &= ~_BV(DDB0);      /* PLL_INTR - Set input */
+        PORTB  |= ~_BV(PORTB0);    /* Activate pull-ups in PORTB pin 12 */
+
+        DDRB   |=  _BV(DDB2);      /* PLL_LE - Enable output */
+        PORTB  &= ~_BV(PORTB2);    /* PLL_LE enable at start for config */
+
         _delay_ms(100);
 
         /* Define I2C address for the PLL */
         pll_si5351c_Addr = addr;
 
         pllSendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
-        pllSendRegister(SI_PLL_INPUT_SRC, 0x06);   // Use external clock
+        pllSendRegister(SI_PLL_INPUT_SRC, 0x04);   // Use external clock on PLL-A // FIXME=2
 
-        pllSendRegister(SI_CLK_CONTROL+0, 0x4F);   // Turn on CLK0
+        pllSendRegister(SI_CLK_CONTROL+0, 0x0F);   // Turn on CLK0 with PLL-A & 8mA // FIXME=0F
         pllSendRegister(SI_CLK_CONTROL+1, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+2, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+3, 0x84);   // Turn off
@@ -312,11 +319,11 @@
         pllSendRegister(SI_CLK_CONTROL+6, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+7, 0x84);   // Turn off
         
-        pllSendRegister(SI_SYNTH_MS_0+0, 0x00);
-        pllSendRegister(SI_SYNTH_MS_0+1, 0x01);
-        pllSendRegister(SI_SYNTH_MS_0+2, 0x00);
-        pllSendRegister(SI_SYNTH_MS_0+3, 0x01);
-        pllSendRegister(SI_SYNTH_MS_0+4, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+0, 0x00);    // (denominator [15:8])
+        pllSendRegister(SI_SYNTH_MS_0+1, 0x01);    // (denominator [7:0])
+        pllSendRegister(SI_SYNTH_MS_0+2, 0x00);    //
+        pllSendRegister(SI_SYNTH_MS_0+3, 0x01);    // integer part divider [15:8] // ??
+        pllSendRegister(SI_SYNTH_MS_0+4, 0x00);    // integer part divider  [7:0]
         pllSendRegister(SI_SYNTH_MS_0+5, 0x00);
         pllSendRegister(SI_SYNTH_MS_0+6, 0x00);
         pllSendRegister(SI_SYNTH_MS_0+7, 0x00);
@@ -391,14 +398,13 @@
 
     void pllRfOutput(uint8_t enable) {
         if (enable) {
-            PORTB |= _BV(PORTB2);
-        } else {
             PORTB &= ~_BV(PORTB2);
+        } else {
+            PORTB |= _BV(PORTB2);
         }
     }
 
 
-    // Not USED !!!
     void pllPA(uint8_t enable) {
         if (enable)
             PORTD |= _BV(PORTD6);
