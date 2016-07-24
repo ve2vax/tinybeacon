@@ -45,7 +45,7 @@
 #define WSPR_CALLSIGN    "X1ABC "          // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
 #define WSPR_LOCATOR     "AB12"            // Exactly 4 characters (First part of the locator)
 #define WSPR_POWER       33                // Numerical value in dBm (range 0-60, check allowed values)
-#define WSPR_FREQUENCY   144491000.0
+#define WSPR_FREQUENCY   144490450.0
 
 /* |                                                 |
    |  Example : VA2NQ Beacon -- Frequency band plan  |

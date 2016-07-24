@@ -158,7 +158,7 @@ void pi4Send() {
     // Send PI4 message
     for (int i=0; i<PI4_SYMBOLS; i++) {
         pllUpdate( Symbols[i] );
-        _delay_ms(PI4_SYMBOL_DURATION - 1.0);  // Timing adjustment !
+        _delay_ms(PI4_SYMBOL_DURATION - 12.0);  // FIXME : Timing adjustment !
     }
 
     pllRfOutput(0);

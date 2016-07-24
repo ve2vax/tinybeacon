@@ -335,14 +335,15 @@
         pllSendRegister(SI_SYNTH_PLL_A + 6, pll_si5351c_BankSettings[bank][6]);
         pllSendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
         //pllSendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
-
-        _delay_us(468);  // TODO Align ...
+        
+        _delay_us(1444);  // 8 commands take : 10.5558ms, aling on 12ms
     }
 
 
     void pllUpdateTiny(uint8_t bank) {
         pllUpdate(bank);
     }
+
 
     void pllSetFreq(uint64_t freq, uint8_t bank) {
         uint64_t divider = 900000000000000 / freq; 
