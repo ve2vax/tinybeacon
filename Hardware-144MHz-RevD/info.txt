@@ -1,0 +1,16 @@
+- Surface : 80mm x 55mm (3149.606 mil x 2165.354 mil) - 4 layers, 1.6mm
+- Gerber files : 4:2 Suppress leading zeroes / Metric(mm) / Reference to absolute. (Gerber & Excellon files)
+- Projet filename : TinyBeacon144-RevD.zip
+- Laser stencil only requiert for the top face (components face, file paste_1.GBX)
+- No top overlay, no bottom Overlay, no bottom paste
+- Files: 
+  - layer_1.GBX : Top Side
+  - layer_2.GBX : Inner Layer 1
+  - layer_3.GBX : Inner Layer 2
+  - layer_4.GBX : Bot Side
+  - mask_1.GBX  : Top Soldermask
+  - mask_4.GBX  : Bot Soldermask
+  - paste_1.GBX : Top Paste
+  - drills.DRL  : Drills / Excellon format
+  - rout.GBX    : Rout provided as GBX - Width 2mm
+
