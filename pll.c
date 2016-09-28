@@ -35,7 +35,7 @@
 #include <util/delay.h>
 
 
-//#define ADI
+#define ADI
 
 
 /* === ADF4355 CODE === */
@@ -164,7 +164,7 @@
         pllCustomSettings[bank][0] |= (1UL<<AUTOCAL);         // Autocal enable
         pllTransmitWord(pllCustomSettings[bank][0]);          // Register 0 (autocal enabled [DB21 = 1])
 
-        _delay_us(178);  // Align on 1ms
+        _delay_us(216);  // Align on 1ms
     }
 
 
@@ -176,7 +176,8 @@
 
         pllCustomSettings[bank][0] |= (1UL<<AUTOCAL);         // Autocal enable
         pllTransmitWord(pllCustomSettings[bank][0]);          // Register 0 (autocal enabled [DB21 = 1])
-        _delay_us(871);  // Align on 1ms
+        //_delay_us(872);  // Align on 1ms
+        _delay_us(900);  // Align on 1ms
     }
 
 
