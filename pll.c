@@ -340,7 +340,9 @@
         pllSendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
         //pllSendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
         
-        _delay_us(1512);  // 8 commands take : 10.5ms, aling on 12ms
+        //_delay_us(1512);  // 8 commands take : 10.5ms, aling on 12ms
+        //_delay_us(172);  // 8 commands take : 10.5ms, aling on 12ms
+        _delay_us(1702);  // 8 commands take : 10.5ms, aling on 12ms
     }
 
 
