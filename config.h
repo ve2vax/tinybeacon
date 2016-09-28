@@ -35,16 +35,24 @@
 #include <stdint.h>
 
 /* Beacon config -- Callsign / Locator / Frequencies */
-#define PI4_MESSAGE      "X1ABC   "        // UPDATE with your Callsign (8 chars, padding with spaces)
+//#define PI4_MESSAGE      "X1ABC   "        // UPDATE with your Callsign (8 chars, padding with spaces)
+#define PI4_MESSAGE      "VA2NQ   "        // UPDATE with your Callsign (8 chars, padding with spaces)
+//#define PI4_FREQUENCY    144491000.0       // UPDATE with frequency aligned with the frequency bands
 #define PI4_FREQUENCY    144491000.0       // UPDATE with frequency aligned with the frequency bands
 
 
-#define MORSE_MESSAGE    "X1ABC  AB12CD "  // UPDATE with your Callsign + Locator
+//#define MORSE_MESSAGE    "X1ABC  AB12CD "  // UPDATE with your Callsign + Locator
+#define MORSE_MESSAGE    "VA2NQ  FN35NL "  // UPDATE with your Callsign + Locator
+//#define MORSE_FREQUENCY  144491000.0       // UPDATE with frequency aligned with the frequency bands ( Propagation Beacons Exclusive )
 #define MORSE_FREQUENCY  144491000.0       // UPDATE with frequency aligned with the frequency bands ( Propagation Beacons Exclusive )
 
-#define WSPR_CALLSIGN    "X1ABC "          // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
-#define WSPR_LOCATOR     "AB12"            // Exactly 4 characters (First part of the locator)
+//#define WSPR_CALLSIGN    "X1ABC "          // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
+#define WSPR_CALLSIGN    "VA2NQ "          // Exactly 6 characters (Padding with space at start. Ex " K1AB " or " K1ABC" or "VE1ABC")
+//#define WSPR_LOCATOR     "AB12"            // Exactly 4 characters (First part of the locator)
+#define WSPR_LOCATOR     "FN35"            // Exactly 4 characters (First part of the locator)
+//#define WSPR_POWER       33                // Numerical value in dBm (range 0-60, check allowed values)
 #define WSPR_POWER       33                // Numerical value in dBm (range 0-60, check allowed values)
+//#define WSPR_FREQUENCY   144490450.0
 #define WSPR_FREQUENCY   144490450.0
 
 /* |                                                 |

@@ -176,7 +176,7 @@
 
         pllCustomSettings[bank][0] |= (1UL<<AUTOCAL);         // Autocal enable
         pllTransmitWord(pllCustomSettings[bank][0]);          // Register 0 (autocal enabled [DB21 = 1])
-        _delay_us(870);  // Align on 1ms
+        _delay_us(871);  // Align on 1ms
     }
 
 
@@ -248,6 +248,10 @@
     }
 
 
+    uint32_t pllGetTiming() {
+        return(1);
+    }
+
 /* === Si5351 CODE === */
 #else
 
@@ -309,7 +313,7 @@
 
         pllSendRegister(SI_SYNTH_MS_0+0, 0x00);
         pllSendRegister(SI_SYNTH_MS_0+1, 0x01);
-        pllSendRegister(SI_SYNTH_MS_0+2, 0x00);
+        pllSendRegister(SI_SYNTH_MS_0+2, 0x00); // update diviser
         pllSendRegister(SI_SYNTH_MS_0+3, 0x01);
         pllSendRegister(SI_SYNTH_MS_0+4, 0x00);
         pllSendRegister(SI_SYNTH_MS_0+5, 0x00);
@@ -336,7 +340,7 @@
         pllSendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
         //pllSendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
         
-        _delay_us(1444);  // 8 commands take : 10.5558ms, aling on 12ms
+        _delay_us(1512);  // 8 commands take : 10.5ms, aling on 12ms
     }
 
 
@@ -351,16 +355,21 @@
 
         uint64_t pllFreq = divider * freq;
 
-        uint32_t mult = pllFreq / TCXO_FREQ;
-        uint32_t num  = ((pllFreq % TCXO_FREQ) * 1048575ULL) / TCXO_FREQ;
+        uint32_t mult = (uint32_t)(pllFreq / TCXO_FREQ);
+        uint32_t num  = (uint32_t)(((pllFreq % TCXO_FREQ) * 1048575ULL) / TCXO_FREQ);
         uint32_t denom = 1048575;
         // FIXME best denom ajust for WSPR
 
+        //uint32_t P1,P2,P3;
+        //P1 = (uint32_t)(128 * ((float)num / (float)denom));
+        //P1 = (uint32_t)(128 * (uint32_t)(mult) + P1 - 512);
+        //P2 = (uint32_t)(128 * ((float)num / (float)denom));
+        //P2 = (uint32_t)(128 * num - denom * P2);
+        //P3 = denom;
+        
         uint32_t P1,P2,P3;
-        P1 = (uint32_t)(128 * ((float)num / (float)denom));
-        P1 = (uint32_t)(128 * (uint32_t)(mult) + P1 - 512);
-        P2 = (uint32_t)(128 * ((float)num / (float)denom));
-        P2 = (uint32_t)(128 * num - denom * P2);
+        P1 = 128 * mult + ((128 * num) / denom) - 512;
+        P2 = 128 * num - denom * ((128 * num) / denom);
         P3 = denom;
 
         /* Packing */
@@ -379,7 +388,7 @@
         if (enable) {
             PORTB &= ~_BV(PORTB2);
         } else {
-            PORTB |= _BV(PORTB2);
+            //PORTB |= _BV(PORTB2); // DEBUG always ON 
         }
     }
 
@@ -389,6 +398,11 @@
             PORTD |= _BV(PORTD6);
         else
             PORTD &= ~_BV(PORTD6);
+    }
+
+
+    uint32_t pllGetTiming() {
+        return(12);
     }
 
 #endif

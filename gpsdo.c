@@ -119,9 +119,6 @@ int main (void) {
     twi_init();
     _delay_ms(10);
 
-    /* ADF4355 PLL Init, conf & settings */
-    pllInit(0x60);  // 0x60 used only for Si5351 (I2C addr.)
-
     /* Prepare the message to encode for PI4 message */
     pi4Encode();
 
@@ -145,12 +142,15 @@ int main (void) {
     /* uBlox : Refresh rate for internal GPSDO alignment */
     gpsSet_CFG_RATE();
 
+    /* ADF4355 PLL Init, conf & settings */
+    pllInit(0x60);  // 0x60 used only for Si5351 (I2C addr.)
+
     /* End of init sequence : Turn on the LED (pin 11) */
     PORTD |= _BV(PORTD7);
 
-    /*** DEBUG ***/
-    //pi4Send();
-    //wsprSend();
+    /* Start with a unsync TX, boring to wait a full sync... */
+    pi4Send();
+    wsprSend();
 
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
@@ -172,14 +172,14 @@ int main (void) {
     return 0;
 }
 
-/* === Si5351 DEBUG
+/* === Si5351 DEBUG 60sec (2500 x 2 x 12ms)
 pllSetFreq(144430000000000,0);
 pllSetFreq(144435000000000,1);
 pllUpdate(0);
 pllRfOutput(1);
 pllPA(1);
 
-for (uint32_t i=0; i<5000; i++) { //while(1) {
+for (uint32_t i=0; i<2500; i++) { //while(1) {
   pllUpdate(0);
   //pllRfOutput(0);
   //_delay_ms(1000);
@@ -193,3 +193,23 @@ pllRfOutput(0);
 pllPA(0);
 */
 
+/* === ADF4355 DEBUG 60sec
+pllSetFreq(222295000000000,0); 
+pllUpdate(0);
+
+pllRfOutput(1);
+pllPA(1);
+_delay_ms(667);
+pllRfOutput(0);
+pllPA(0);
+
+for (uint32_t i=0; i<60000; i++) { //while(1) {
+  pllUpdate(0);
+}
+
+pllRfOutput(1);
+pllPA(1);
+_delay_ms(667);
+pllRfOutput(0);
+pllPA(0);
+*/

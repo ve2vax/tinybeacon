@@ -166,7 +166,7 @@ void wsprSend() {
     // Send WSPR message
     for (int i=0; i<WSPR_SYMBOLS_LENGTH; i++) {
         pllUpdateTiny( Symbols[i] );
-        _delay_ms(WSPR_SYMBOL_DURATION - 12.0);  // FIXME : Timing adjustment !
+        _delay_ms(WSPR_SYMBOL_DURATION - 12.0);  // FIXME : Timing adjustment ! (-12 Si, -1 ADI)
     }
 
     pllRfOutput(0);

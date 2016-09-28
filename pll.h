@@ -39,3 +39,4 @@ void pllUpdateTiny(uint8_t bank);
 void pllSetFreq(uint64_t freq, uint8_t bank);
 void pllRfOutput(uint8_t enable);
 void pllPA(uint8_t enable);
+uint32_t pllGetTiming();
