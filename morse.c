@@ -78,7 +78,7 @@ void morseSendString(char* str) {
             _delay_ms(MORSE_DOT_DURATION);
             morseChar = morseChar <<1;              // Point to next bit
         }
-        _delay_ms(MORSE_DOT_DURATION * 4);              // Inter morse character pause
+        _delay_ms(MORSE_DOT_DURATION * 4);          // Inter morse character pause
         str++;
     }
 }
@@ -104,7 +104,7 @@ void morse2TonesSendString(char* str) {
             _delay_ms(MORSE_DOT_DURATION);
             morseChar = morseChar <<1;              // Point to next bit
         }
-        _delay_ms(MORSE_DOT_DURATION * 4);              // Inter morse character pause
+        _delay_ms(MORSE_DOT_DURATION * 4);          // Inter morse character pause
         str++;
     }
 }

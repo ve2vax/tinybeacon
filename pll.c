@@ -170,13 +170,9 @@
 
     void pllUpdateTiny(uint8_t bank) {
         /* Quick and dirty update if the delta is very low */
-
-        //pllTransmitWord(pllGeneralSettings[bank][2]);          // Register 2
         pllTransmitWord(pllCustomSettings[bank][1]);          // Register 1
-
         pllCustomSettings[bank][0] |= (1UL<<AUTOCAL);         // Autocal enable
         pllTransmitWord(pllCustomSettings[bank][0]);          // Register 0 (autocal enabled [DB21 = 1])
-        //_delay_us(872);  // Align on 1ms
         _delay_us(900);  // Align on 1ms
     }
 
@@ -346,8 +342,6 @@
         pllSendRegister(SI_SYNTH_PLL_A + 7, pll_si5351c_BankSettings[bank][7]);
         //pllSendRegister(SI_PLL_RESET, 0xA0);  // Reset both PLL -- make glitch!!
         
-        //_delay_us(1512);  // 8 commands take : 10.5ms, aling on 12ms
-        //_delay_us(172);  // 8 commands take : 10.5ms, aling on 12ms
         _delay_us(1702);  // 8 commands take : 10.5ms, aling on 12ms
     }
 
