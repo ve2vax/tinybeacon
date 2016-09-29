@@ -36,6 +36,8 @@ void pllInit(uint8_t addr);
 void pllShutdown();
 void pllUpdate(uint8_t bank);
 void pllUpdateTiny(uint8_t bank);
+void pllMultiSynth(uint32_t divider, uint8_t rDiv);
 void pllSetFreq(uint64_t freq, uint8_t bank);
 void pllRfOutput(uint8_t enable);
 void pllPA(uint8_t enable);
+uint32_t pllGetTiming();

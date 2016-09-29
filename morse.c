@@ -111,7 +111,7 @@ void morse2TonesSendString(char* str) {
 
 void morseSendMessage() {
     /* PLL setup */
-    pllSetFreq((MORSE_FREQUENCY * 1000000), 0);
+    pllSetFreq((uint64_t)MORSE_FREQUENCY * 1000000ULL, 0);
     pllUpdate(0);
     _delay_ms(10);
 
@@ -128,8 +128,8 @@ void morseSendMessage() {
 
 void morse2TonesSendMessage() {
     /* PLL setup */
-    pllSetFreq(((MORSE_FREQUENCY-250.0) * 1000000), 0);  // PI4 compliant : 250 for 144MHz and below, 400 Hz upper
-    pllSetFreq(((MORSE_FREQUENCY)       * 1000000), 1);
+    pllSetFreq((uint64_t)(MORSE_FREQUENCY-250.0) * 1000000ULL, 0);  // PI4 compliant : 250 for 144MHz and below, 400 Hz upper
+    pllSetFreq((uint64_t)(MORSE_FREQUENCY)       * 1000000ULL, 1);
     pllUpdate(0);
 
     pllPA(1);

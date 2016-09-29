@@ -108,10 +108,6 @@ int main (void) {
     CLKPR = 0;            // Set prescaler to 0 = Restore system clock to 10 MHz
     sei();
 
-    /* DEBUG Enable I2C output */
-    DDRC   |= _BV(DDC4);  // Enable output
-    DDRC   |= _BV(DDC5);  // Enable output
-
     /* LED : Set pin 11 of PORT-PD7 for output*/
     DDRD |= _BV(DDD7);
 
@@ -122,9 +118,6 @@ int main (void) {
     /* Peform I2C modules init */
     twi_init();
     _delay_ms(10);
-
-    /* ADF4355 PLL Init, conf & settings */
-    pllInit(0);
 
     /* Prepare the message to encode for PI4 message */
     pi4Encode();
@@ -149,11 +142,15 @@ int main (void) {
     /* uBlox : Refresh rate for internal GPSDO alignment */
     gpsSet_CFG_RATE();
 
+    /* ADF4355 PLL Init, conf & settings */
+    pllInit(0x60);  // 0x60 used only for Si5351 (I2C addr.)
+
     /* End of init sequence : Turn on the LED (pin 11) */
     PORTD |= _BV(PORTD7);
 
-    /*** DEBUG ***/
-    //wsprSend();
+    /* Start with a unsync TX, boring to wait a full sync... */
+    pi4Send();
+    wsprSend();
 
     /* Loop sequence :
        - PI4 + Morse + Tone (1 minute)
@@ -175,19 +172,44 @@ int main (void) {
     return 0;
 }
 
+/* === Si5351 DEBUG 60sec (2500 x 2 x 12ms)
+pllSetFreq(144430000000000,0);
+pllSetFreq(144435000000000,1);
+pllUpdate(0);
+pllRfOutput(1);
+pllPA(1);
 
-/*  === Si5351 DEBUG
-    pll_si5351c_SetAddr(0x60);
-    pll_si5351c_Init();
-    pll_si5351c_SetFreq(144490000,0);
-    pll_si5351c_SetFreq(144490007,1);
-    while(1) {
-      pll_si5351c_Update(0);
-      //pll_si5351c_RfOutput(1);
-      _delay_ms(1000); 
+for (uint32_t i=0; i<2500; i++) { //while(1) {
+  pllUpdate(0);
+  //pllRfOutput(0);
+  //_delay_ms(1000);
 
-      pll_si5351c_Update(1);
-      //pll_si5351c_RfOutput(0);
-      _delay_ms(1000); 
-    }
+  pllUpdate(1);
+  //pllRfOutput(1);
+  //_delay_ms(1000);
+}
+
+pllRfOutput(0);
+pllPA(0);
+*/
+
+/* === ADF4355 DEBUG 60sec
+pllSetFreq(222295000000000,0); 
+pllUpdate(0);
+
+pllRfOutput(1);
+pllPA(1);
+_delay_ms(667);
+pllRfOutput(0);
+pllPA(0);
+
+for (uint32_t i=0; i<60000; i++) { //while(1) {
+  pllUpdate(0);
+}
+
+pllRfOutput(1);
+pllPA(1);
+_delay_ms(667);
+pllRfOutput(0);
+pllPA(0);
 */

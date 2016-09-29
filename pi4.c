@@ -132,12 +132,12 @@ void PI4MakeMessage(char *msg) {
 
 
 void pi4SetFreqs(float carrierFreq) {
-    uint64_t baseFreq = (uint64_t)carrierFreq * 1000000;
+    uint64_t baseFreq = (uint64_t)carrierFreq * 1000000ULL;
 
-    pllSetFreq(baseFreq - 117187500, 0);
-    pllSetFreq(baseFreq + 117187500, 1);
-    pllSetFreq(baseFreq + 351562500, 2);
-    pllSetFreq(baseFreq + 585937500, 3);
+    pllSetFreq(baseFreq - 117187500ULL, 0);
+    pllSetFreq(baseFreq + 117187500ULL, 1);
+    pllSetFreq(baseFreq + 351562500ULL, 2);
+    pllSetFreq(baseFreq + 585937500ULL, 3);
     pllSetFreq(baseFreq, 4);
     pllUpdate(4);
 }
@@ -158,7 +158,7 @@ void pi4Send() {
     // Send PI4 message
     for (int i=0; i<PI4_SYMBOLS; i++) {
         pllUpdate( Symbols[i] );
-        _delay_ms(PI4_SYMBOL_DURATION - 1.0);  // Timing adjustment !
+        _delay_ms(PI4_SYMBOL_DURATION - 12.0);  // FIXME : Timing adjustment ! (-12 Si, -1 ADI)
     }
 
     pllRfOutput(0);
