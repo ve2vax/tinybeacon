@@ -35,7 +35,7 @@
 #include <util/delay.h>
 
 
-#define ADI
+//#define ADI
 
 
 /* === ADF4355 CODE === */
@@ -301,7 +301,7 @@
         pll_si5351c_Addr = addr;
 
         pllSendRegister(SI_CLK_ENABLE, 0xFF);      // Disable all output
-        pllSendRegister(SI_PLL_INPUT_SRC, 0x04);   // Use external clock on PLL-A
+        pllSendRegister(SI_PLL_INPUT_SRC, 0x0C);   // Use external clock on PLL-A & PLL-B
 
         pllSendRegister(SI_CLK_CONTROL+0, 0x0F);   // Turn on CLK0 with PLL-A & 8mA
         pllSendRegister(SI_CLK_CONTROL+1, 0x84);   // Turn off
@@ -312,14 +312,19 @@
         pllSendRegister(SI_CLK_CONTROL+6, 0x84);   // Turn off
         pllSendRegister(SI_CLK_CONTROL+7, 0x84);   // Turn off
 
-        pllSendRegister(SI_SYNTH_MS_0+0, 0x00);
-        pllSendRegister(SI_SYNTH_MS_0+1, 0x01);
-        pllSendRegister(SI_SYNTH_MS_0+2, 0x00); // update diviser
-        pllSendRegister(SI_SYNTH_MS_0+3, 0x01);
-        pllSendRegister(SI_SYNTH_MS_0+4, 0x00);
-        pllSendRegister(SI_SYNTH_MS_0+5, 0x00);
-        pllSendRegister(SI_SYNTH_MS_0+6, 0x00);
-        pllSendRegister(SI_SYNTH_MS_0+7, 0x00);
+        /* MultiSynth0
+           P1 : Integer part
+           P2 : Fractional numerator
+           P3 : Fractional denominator
+        */
+        pllSendRegister(SI_SYNTH_MS_0+0, 0x00); // MS0_P3[15:8]
+        pllSendRegister(SI_SYNTH_MS_0+1, 0x01); // MS0_P3[7:0]
+        pllSendRegister(SI_SYNTH_MS_0+2, 0x00); // R0_DIV[2:0] + MS0_DIVBY4[1:0] + MS0_P1[17:16] 
+        pllSendRegister(SI_SYNTH_MS_0+3, 0x01); // MS0_P1[15:8]
+        pllSendRegister(SI_SYNTH_MS_0+4, 0x00); // MS0_P1[7:0]
+        pllSendRegister(SI_SYNTH_MS_0+5, 0x00); // MS0_P3[19:16] +  MS0_P2[19:16]
+        pllSendRegister(SI_SYNTH_MS_0+6, 0x00); // MS0_P2[15:8]
+        pllSendRegister(SI_SYNTH_MS_0+7, 0x00); // MS0_P2[7:0]
 
         pllSendRegister(SI_CLK_ENABLE, 0xFE);      // Disable all output exept CLK0 (CLK0_OEB)
         pllSendRegister(SI_PLL_RESET, 0xA0);
@@ -352,24 +357,34 @@
     }
 
 
+    void pllMultiSynth(uint32_t divider, uint8_t rDiv) {
+        uint32_t P1 = 128 * divider - 512;
+        uint32_t P2 = 0; // P2 = 0, P3 = 1 forces an integer value for the divider
+        uint32_t P3 = 1;
+
+        pllSendRegister(SI_SYNTH_MS_0 + 0, (P3 & 0x0000FF00) >> 8);
+        pllSendRegister(SI_SYNTH_MS_0 + 1, (P3 & 0x000000FF));
+        pllSendRegister(SI_SYNTH_MS_0 + 2, ((P1 & 0x00030000) >> 16) | rDiv);
+        pllSendRegister(SI_SYNTH_MS_0 + 3, (P1 & 0x0000FF00) >> 8);
+        pllSendRegister(SI_SYNTH_MS_0 + 4, (P1 & 0x000000FF));
+        pllSendRegister(SI_SYNTH_MS_0 + 5, ((P3 & 0x000F0000) >> 12) | ((P2 & 0x000F0000) >> 16));
+        pllSendRegister(SI_SYNTH_MS_0 + 6, (P2 & 0x0000FF00) >> 8);
+        pllSendRegister(SI_SYNTH_MS_0 + 7, (P2 & 0x000000FF));
+    }
+
+
     void pllSetFreq(uint64_t freq, uint8_t bank) {
-        uint64_t divider = 900000000000000 / freq; 
+        uint64_t divider = 900000000000000 / freq; // 900 / 144 = 6.25 > 6
         if (divider % 2) divider--;
 
-        uint64_t pllFreq = divider * freq;
+        pllMultiSynth(divider, 0); // FIXME !!! 1 time only
 
-        uint32_t mult = (uint32_t)(pllFreq / TCXO_FREQ);
-        uint32_t num  = (uint32_t)(((pllFreq % TCXO_FREQ) * 1048575ULL) / TCXO_FREQ);
+        uint64_t pllFreq = divider * freq; // 6 * 144 = 864
+        uint32_t mult = (uint32_t)(pllFreq / TCXO_FREQ); // 864 / 10 = 86.4 > 86 (entre 15 & 90)
+        uint32_t num  = (uint32_t)(((pllFreq % TCXO_FREQ) * 1048575) / TCXO_FREQ); //
         uint32_t denom = 1048575;
         // FIXME best denom ajust for WSPR
 
-        //uint32_t P1,P2,P3;
-        //P1 = (uint32_t)(128 * ((float)num / (float)denom));
-        //P1 = (uint32_t)(128 * (uint32_t)(mult) + P1 - 512);
-        //P2 = (uint32_t)(128 * ((float)num / (float)denom));
-        //P2 = (uint32_t)(128 * num - denom * P2);
-        //P3 = denom;
-        
         uint32_t P1,P2,P3;
         P1 = 128 * mult + ((128 * num) / denom) - 512;
         P2 = 128 * num - denom * ((128 * num) / denom);
@@ -385,7 +400,6 @@
         pll_si5351c_BankSettings[bank][6] = (P2 & 0x0000FF00) >> 8;
         pll_si5351c_BankSettings[bank][7] = (P2 & 0x000000FF);
     }
-
 
     void pllRfOutput(uint8_t enable) {
         if (enable) {
