@@ -471,9 +471,9 @@ void delay_sec() {
 }
  
  
-void delay_hours(void)
+void window_hours_off(void)
 {
-    delay_sec(WINDOW * 3600);
+    delay_sec(SLEEP_WINDOW * 3600);
 }
 
 void gpsTimeAling2M() {
