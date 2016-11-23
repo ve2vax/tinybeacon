@@ -166,7 +166,12 @@ int main (void) {
 
         timeAlignWSPR();
         wsprSend();
+        gpsGetTime();
+        if (hours == window_off_hours) {
+           delay_hours
+        }
     }
+   
 
     /* This case never happens :) Useless without powermanagement... */
     return 0;
