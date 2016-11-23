@@ -460,9 +460,9 @@ void gpsTimeAling1M() {
         _delay_ms(1);
 }
 
-/* Section ajouter par Normand VE2VAX.VA2Nq , pour permettre une fenetre  de veille /*
-void delay_sec(long sec)
-{
+/* Section ajouter par Normand VE2VAX.VA2NQ , pour permettre une fenetre  de veille /*
+void delay_sec() {
+    uint8_t sec = 59 - lGpsData.seconds; 
     while (sec > 0)
     {
         _delay_ms(1000);
@@ -470,11 +470,10 @@ void delay_sec(long sec)
     }
 }
  
-enum { seconds_per_hour = 60 * 60 };
  
 void delay_hours(void)
 {
-    delay_sec(No_tx_period * seconds_per_hour);
+    delay_sec(WINDOW * 3600);
 }
 
 void gpsTimeAling2M() {
