@@ -168,7 +168,7 @@ int main (void) {
         wsprSend();
         gpsGetTime();
         if (hours == SLEEP_TIME_START) {
-           delay_sleep_window()
+           delay_sleep_window();
         }
     }
    
