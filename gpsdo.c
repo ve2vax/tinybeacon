@@ -167,7 +167,7 @@ int main (void) {
         timeAlignWSPR();
         wsprSend();
         gpsGetTime();
-        if (hours == SLEEP_TIME_START) {
+        if (lGpsData.hours == SLEEP_TIME_START) {
            delay_sleep_window();
         }
     }
