@@ -462,7 +462,7 @@ void gpsTimeAling1M() {
 
 /* Section ajouter par Normand VE2VAX.VA2NQ , pour permettre une fenetre  de veille /*
 void delay_sec() {
-    uint8_t sec; 
+    uint16_t sec; 
     while (sec > 0)
     {
         _delay_ms(1000);
