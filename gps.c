@@ -470,14 +470,13 @@ void delay_sec() {
     }
 }
  
-void get_gps_hours()
-{
-    uint8_t hours = lGpsData.minutes;
-}
 
 void window_off_hours(void)
 {
-    delay_sec(SLEEP_WINDOW * 3600);
+    uint8_t hours = lGpsData.hours;
+      if (hours == SLEEP_TIME_START) {
+         delay_sec(SLEEP_WINDOW * 3600);
+         }
 }
 
 void gpsTimeAling2M() {
