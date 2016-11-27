@@ -169,7 +169,7 @@ int main (void) {
         gpsGetTime();
         delay_sleep_window();
         }
-    }
+    
    
 
     /* This case never happens :) Useless without powermanagement... */
