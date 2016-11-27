@@ -42,7 +42,6 @@ void gpsPoll_NAV_TIMEGPS();
 void gpsCrcUpdate(uint8_t *payload, uint8_t payloadSize);
 void gpsGetPVT();
 void gpsGetTime();
-void get_gps_hours();
 void gpsExtractLocator();
 void gpsExtractStrings();
 void gpsTimeAling1Mb();
